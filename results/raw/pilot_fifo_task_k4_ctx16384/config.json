@@ -1,0 +1,57 @@
+{
+  "args": {
+    "workload": "workloads/generated/pilot.jsonl",
+    "name": "pilot_fifo_task_k4_ctx16384",
+    "sched": "fifo_task",
+    "k": 4,
+    "url": "http://127.0.0.1:8080",
+    "req_timeout": 300,
+    "max_tasks": null,
+    "sample_ms": 100,
+    "no_warmup": false,
+    "out_dir": "results/raw"
+  },
+  "host": "ip-172-31-38-201.us-west-2.compute.internal",
+  "git_commit": "8cf020e976144c699baf8497a7038c689b053c2f",
+  "started": "2026-11-02T07:19:21",
+  "server": {
+    "total_slots": 4,
+    "model_path": "/home/ec2-user/llmsys/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "n_ctx": 4096
+  },
+  "workload_meta": {
+    "args": {
+      "name": "pilot",
+      "seed": 0,
+      "n_tasks": 30,
+      "mix": "",
+      "arrival": "poisson",
+      "rate": 0.5,
+      "burst_size": 16,
+      "burst_gap": 30.0,
+      "prefix": "long_shared",
+      "ctx_tokens": null,
+      "out_tokens": null,
+      "steps": null,
+      "tool_delay": null,
+      "tool_tokens": null,
+      "n_docs": 4,
+      "out_dir": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/generated"
+    },
+    "git_commit": "8cf020e976144c699baf8497a7038c689b053c2f",
+    "n_tasks": 30,
+    "types": {
+      "multistep": 8,
+      "long_context": 5,
+      "short_qa": 6,
+      "long_gen": 5,
+      "shared_doc": 6
+    },
+    "total_steps": 58,
+    "est_peak_context": {
+      "p50": 2992,
+      "max": 7277
+    },
+    "duration_s": 56.87616500872817
+  }
+}
