@@ -21,7 +21,11 @@ class LlamaClient:
         self.session = None
 
     async def __aenter__(self):
-        self.session = aiohttp.ClientSession(timeout=self.timeout, connector=aiohttp.TCPConnector(limit=0))
+        # force_close: llama-server drops idle keep-alive connections after a few seconds; reusing
+        # one after a tool delay fails with "Can not write request body". Fresh connections are
+        # cheap on localhost.
+        connector = aiohttp.TCPConnector(limit=0, force_close=True)
+        self.session = aiohttp.ClientSession(timeout=self.timeout, connector=connector)
         return self
 
     async def __aexit__(self, *exc):
