@@ -3,3 +3,5 @@ __pycache__/
 .venv/
 .env
 results/raw/*.tmp
+# regenerated deterministically from the .meta.json args + seed
+workloads/generated/*.jsonl
