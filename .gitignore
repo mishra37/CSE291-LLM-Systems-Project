@@ -1,0 +1,5 @@
+*.gguf
+__pycache__/
+.venv/
+.env
+results/raw/*.tmp

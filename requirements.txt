@@ -1,0 +1,7 @@
+aiohttp
+numpy
+pandas
+matplotlib
+nvidia-ml-py
+psutil
+openai
