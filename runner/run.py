@@ -227,6 +227,7 @@ if __name__ == "__main__":
     ap.add_argument("--sched", choices=sorted(SCHEDULERS), default="fifo_request")
     ap.add_argument("-k", type=int, default=4, help="fixed concurrency")
     ap.add_argument("--url", default="http://127.0.0.1:8080")
+    ap.add_argument("--server-args", default="", help="llama-server flags used for this run (recorded only)")
     ap.add_argument("--req-timeout", type=float, default=300)
     ap.add_argument("--max-tasks", type=int, help="only replay the first N tasks (pilots)")
     ap.add_argument("--sample-ms", type=int, default=100)
