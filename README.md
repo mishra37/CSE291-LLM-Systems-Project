@@ -28,8 +28,10 @@ Qwen2.5-7B-Instruct Q4_K_M · exact versions in [results/env_*.txt](results/).
     so its slot may be reused and its context recomputed on the next step.
   - `fifo_task`: at most K *tasks* admitted. A task keeps its slot (and KV cache) through tool
     calls, but the slot sits idle during the wait.
-- **Host-RAM prompt cache:** recent llama.cpp keeps evicted prompts' KV in CPU RAM by default
-  (`--cache-ram 8192`). We run baselines with it off (`--cache-ram 0`, GPU-only) and on.
+- **RAM cache:** when llama.cpp needs a slot for a new request, it doesn't simply throw away
+  the old conversation stored there. By default it saves a copy in regular CPU memory (up to
+  8 GB, `--cache-ram 8192`), so if that conversation comes back it can be reloaded instead of
+  recomputed. We test with this feature both off (`--cache-ram 0`, GPU only) and on.
 
 ## Workloads
 Five task types, mixed by default (35/15/15/25/10%):
@@ -84,16 +86,26 @@ Use `tmux` for long runs, and **stop the EC2 instance when done**.
 | Peak GPU memory | 5.9 GB | 5.9 GB | 5.9 GB | 5.9 GB |
 | Server RSS | 0.9 GB | 0.9 GB | 2.0 GB | 3.1 GB |
 
-1. **Each FIFO variant is unfair to a different task class.** `fifo_request` re-queues every
-   agent step, which gives multi-step tasks the worst tail. `fifo_task` makes short tasks wait
-   about 2× longer behind slots that sit idle during tool calls.
-2. **Recompute is real but cheap at ~3k-token contexts** (~0.3 s per resumed step at ~3k
-   tokens/s prefill); queueing dominates. Expected to change at 8k–16k contexts.
-3. **llama.cpp's host-RAM cache is a built-in CPU tier.** It cuts recompute 36% → 28% at up to
-   +2 GB of host RAM.
-4. **GPU memory is flat because the KV cache is preallocated.** Memory pressure shows up instead
-   as overflow failures (all 4 failures are `long_context` tasks over 5k tokens rejected by
-   4096-token slots, while the 16k pool is mostly idle), recompute, and idle reserved slots.
-5. The load (0.5 tasks/s) doesn't saturate the GPU. Sweeps need higher load.
+1. **Each FIFO version slows down a different kind of task.**
+   - With `fifo_request`, a multi-step task goes back to the end of the line after every tool
+     call, so long agent tasks end up the slowest.
+   - With `fifo_task`, short tasks wait about twice as long, because slots are reserved by
+     agent tasks that are just sitting idle while waiting on a tool.
+2. **Redoing work after a tool call costs less than waiting in line, for now.** When a task's
+   slot gets reused, the model has to re-read the whole conversation, which takes about 0.3 s
+   per step at our ~3k-token conversation sizes. Time spent waiting in the queue is much
+   larger. We expect this to flip with longer conversations (8k–16k tokens).
+3. **llama.cpp's RAM cache helps a little.** Saving old conversations in CPU memory cut the
+   amount of redone work from 36% to 28%, at the cost of up to 2 GB extra CPU memory.
+4. **GPU memory use doesn't change, so memory pressure shows up in other ways.** llama.cpp
+   reserves all the memory it will use at startup, so the GPU always shows 5.9 GB. Running out
+   of memory looks like:
+   - **Rejected tasks:** each slot can hold only 4,096 tokens, so all 4 failures were long
+     documents (5k+ tokens) that didn't fit, even though most of the total 16k-token space was
+     unused at the time.
+   - **Redone work** when a slot is reused.
+   - **Reserved slots sitting idle** during tool calls.
+5. **The GPU wasn't fully busy.** Tasks arrived slowly (one every 2 s on average), so the next
+   experiments need to send work faster to find the real limits.
 
 
