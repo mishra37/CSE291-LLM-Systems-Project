@@ -1,0 +1,101 @@
+{
+  "run": "results/raw/v1_ramcache_fifo_request_k4",
+  "offered": 80,
+  "qa": {
+    "offered": 30,
+    "completed": 30,
+    "correct": 28,
+    "missing": 0,
+    "completion_rate": 1.0,
+    "accuracy_among_completed": 0.9333333333333333,
+    "success_rate_all_offered": 0.9333333333333333,
+    "mean_token_f1_all_offered_squad": 0.9785714285714286,
+    "by_type": {
+      "long_context": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 9,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.9,
+        "success_rate_all_offered": 0.9,
+        "mean_token_f1_all_offered_squad": null
+      },
+      "short_qa": {
+        "offered": 20,
+        "completed": 20,
+        "correct": 19,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.95,
+        "success_rate_all_offered": 0.95,
+        "mean_token_f1_all_offered_squad": 0.9785714285714286
+      }
+    }
+  },
+  "multistep": {
+    "offered": 40,
+    "completed": 40,
+    "correct": 12,
+    "missing": 0,
+    "completion_rate": 1.0,
+    "accuracy_among_completed": 0.3,
+    "success_rate_all_offered": 0.3,
+    "mean_field_fraction_all_offered": 0.41667,
+    "by_subtype": {
+      "document_lookup": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 9,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.9,
+        "success_rate_all_offered": 0.9,
+        "mean_field_fraction_all_offered": 0.9
+      },
+      "inventory_check": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 3,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.3,
+        "success_rate_all_offered": 0.3,
+        "mean_field_fraction_all_offered": 0.4
+      },
+      "log_investigation": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 0,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.0,
+        "success_rate_all_offered": 0.0,
+        "mean_field_fraction_all_offered": 0.0
+      },
+      "sales_analysis": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 0,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.0,
+        "success_rate_all_offered": 0.0,
+        "mean_field_fraction_all_offered": 0.36668
+      }
+    }
+  },
+  "long_gen": {
+    "offered": 10,
+    "completed": 10,
+    "completion_rate": 1.0,
+    "word_range_ok": 3,
+    "rubric_quality": "not scored (judge after the timed run)"
+  },
+  "auto_scored": {
+    "offered": 70,
+    "completed": 70,
+    "correct": 40
+  },
+  "correct_tasks_per_s": 0.1594
+}

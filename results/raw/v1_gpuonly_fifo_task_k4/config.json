@@ -1,0 +1,53 @@
+{
+  "args": {
+    "workload": "workloads/generated/v1_batch.jsonl",
+    "name": "v1_gpuonly_fifo_task_k4",
+    "sched": "fifo_task",
+    "k": 4,
+    "url": "http://127.0.0.1:8080",
+    "server_args": "-c 16384 -np 4 --cache-ram 0",
+    "req_timeout": 300,
+    "max_tasks": null,
+    "sample_ms": 100,
+    "no_warmup": false,
+    "out_dir": "results/raw"
+  },
+  "host": "ip-172-31-38-201.us-west-2.compute.internal",
+  "git_commit": "272b7308c2045e10fd5bb4b3a3c7cb83ba9fe573",
+  "started": "2026-11-03T23:31:21",
+  "server": {
+    "total_slots": 4,
+    "model_path": "/home/ec2-user/llmsys/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "n_ctx": 4096
+  },
+  "workload_meta": {
+    "source": "fixed_v1",
+    "args": {
+      "name": "v1_batch",
+      "task_dir": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/tasks/v1",
+      "types": "short_qa,long_context,long_gen,multistep",
+      "limit": null,
+      "arrival": "batch",
+      "rate": 1.0,
+      "tool_delay": null,
+      "seed": 0,
+      "out_dir": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/generated"
+    },
+    "n_tasks": 80,
+    "types": {
+      "multistep": 40,
+      "long_context": 10,
+      "long_gen": 10,
+      "short_qa": 20
+    },
+    "model_calls": 252,
+    "task_files": {
+      "short_qa": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/tasks/v1/short_qa.jsonl",
+      "long_context": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/tasks/v1/long_context.jsonl",
+      "long_gen": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/tasks/v1/long_generation.jsonl",
+      "multistep": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/tasks/v1/multistep.jsonl"
+    },
+    "manifest_sha256": "0f9e59ea4332f5f0b97fc08b5250fa5319174edce5ab8035f7b776e7acebe0d5",
+    "duration_s": 0.0
+  }
+}
