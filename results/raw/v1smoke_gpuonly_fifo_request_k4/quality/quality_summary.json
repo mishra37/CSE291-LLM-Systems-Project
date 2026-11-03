@@ -1,0 +1,71 @@
+{
+  "run": "results/raw/v1smoke_gpuonly_fifo_request_k4",
+  "offered": 20,
+  "qa": {
+    "offered": 10,
+    "completed": 10,
+    "correct": 9,
+    "missing": 0,
+    "completion_rate": 1.0,
+    "accuracy_among_completed": 0.9,
+    "success_rate_all_offered": 0.9,
+    "mean_token_f1_all_offered_squad": 1.0,
+    "by_type": {
+      "long_context": {
+        "offered": 5,
+        "completed": 5,
+        "correct": 4,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.8,
+        "success_rate_all_offered": 0.8,
+        "mean_token_f1_all_offered_squad": null
+      },
+      "short_qa": {
+        "offered": 5,
+        "completed": 5,
+        "correct": 5,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 1.0,
+        "success_rate_all_offered": 1.0,
+        "mean_token_f1_all_offered_squad": 1.0
+      }
+    }
+  },
+  "multistep": {
+    "offered": 5,
+    "completed": 5,
+    "correct": 0,
+    "missing": 0,
+    "completion_rate": 1.0,
+    "accuracy_among_completed": 0.0,
+    "success_rate_all_offered": 0.0,
+    "mean_field_fraction_all_offered": 0.26668,
+    "by_subtype": {
+      "sales_analysis": {
+        "offered": 5,
+        "completed": 5,
+        "correct": 0,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.0,
+        "success_rate_all_offered": 0.0,
+        "mean_field_fraction_all_offered": 0.26668
+      }
+    }
+  },
+  "long_gen": {
+    "offered": 5,
+    "completed": 5,
+    "completion_rate": 1.0,
+    "word_range_ok": 2,
+    "rubric_quality": "not scored (judge after the timed run)"
+  },
+  "auto_scored": {
+    "offered": 15,
+    "completed": 15,
+    "correct": 9
+  },
+  "correct_tasks_per_s": 0.1894
+}
