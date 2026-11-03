@@ -4,13 +4,93 @@ python -m workloads.multistep --tasks workloads/tasks/v1/multistep.jsonl
 This does not execute model requests, agent tools, or a quality evaluator.
 """
 import argparse
+from datetime import date
 import json
 from pathlib import Path
+
+
+def document_fields(section):
+    """Extract labeled lines from the fictional document, not hidden metadata."""
+    fields = {}
+    for line in section["content"].splitlines():
+        if ": " in line:
+            key, value = line.split(": ", 1)
+            if key in fields:
+                raise ValueError(f"Repeated document field: {key}")
+            fields[key] = value
+    return fields
+
+
+def document_reference(task):
+    sections = list(task["tool_fixtures"].values())
+    fields = [document_fields(section) for section in sections]
+    mode = task["scenario"]
+    if mode == "section_chain":
+        by_id = {section["section_id"]: document_fields(section) for section in sections}
+        if len(by_id) != len(sections):
+            raise ValueError("Duplicate document section")
+        current, chain = task["document_query"]["start_section"], []
+        while current != "END":
+            if current in chain or current not in by_id:
+                raise ValueError("Cyclic or missing document link")
+            field = by_id[current]
+            if field["Project"] != task["document_query"]["project"]:
+                raise ValueError("Document link crosses projects")
+            chain.append(current)
+            current = field["Next section"]
+        return {"owner_team": field["Owner team"], "retention_days": int(field["Retention days"]), "section_chain": chain}
+    if mode == "effective_revision":
+        cutoff = date.fromisoformat(task["document_query"]["as_of"])
+        applicable = [field for field in fields if field["Policy"] == task["document_query"]["policy"]
+                      and date.fromisoformat(field["Effective date"]) <= cutoff]
+        if not applicable:
+            raise ValueError("No effective policy revision")
+        revisions = [int(field["Revision"]) for field in applicable]
+        if len(revisions) != len(set(revisions)):
+            raise ValueError("Duplicate applicable revision")
+        latest = max(applicable, key=lambda f: int(f["Revision"]))
+        return {"revision": int(latest["Revision"]), "retention_days": int(latest["Retention days"]), "owner_team": latest["Owner team"]}
+    if mode == "approval_union":
+        approvals = {field["Site"]: set(field["Required approvals"].split(", ")) for field in fields}
+        if len(approvals) != len(fields):
+            raise ValueError("Duplicate site document")
+        combined = set().union(*approvals.values())
+        return {"required_approvals": sorted(combined), "approval_count": len(combined),
+                "sites_requiring_security_review": sorted(site for site, required in approvals.items() if "security" in required)}
+    raise ValueError(f"Unknown document scenario: {mode}")
+
+
+def inventory_reference(task):
+    rows = list(task["tool_fixtures"].values())
+    available = {row["item_id"]: max(0, row["on_hand"] - row["reserved"] - row["damaged"]) for row in rows}
+    if len(available) != len(rows):
+        raise ValueError("Duplicate inventory item")
+    if task["scenario"] == "warehouse_pool":
+        if len({row["warehouse"] for row in rows}) != len(rows) or any(row["sku"] != task["inventory_query"]["sku"] for row in rows):
+            raise ValueError("Warehouse records must be distinct and refer to the requested SKU")
+        total = sum(available.values())
+        return {"available_units": total, "shortfall_units": max(0, task["inventory_query"]["demand"] - total),
+                "warehouses_with_stock": sorted(row["warehouse"] for row in rows if available[row["item_id"]] > 0)}
+    if task["scenario"] == "arrival_cutoff":
+        cutoff = date.fromisoformat(task["inventory_query"]["deadline"])
+        for row in rows:
+            if date.fromisoformat(row["arrival_date"]) <= cutoff:
+                available[row["item_id"]] += row["incoming_units"]
+    elif task["scenario"] != "sku_shortages":
+        raise ValueError("Unknown inventory scenario")
+    shortfalls = {row["item_id"]: max(0, row["demand"] - available[row["item_id"]]) for row in rows}
+    affected = sorted(sku for sku, units in shortfalls.items() if units > 0)
+    worst = min(affected, key=lambda sku: (-shortfalls[sku], sku)) if affected else ""
+    return {"shortage_skus": affected, "total_shortage_units": sum(shortfalls.values()), "largest_shortage_sku": worst}
 
 
 def reference_answer(task):
     fixtures = task["tool_fixtures"]
     mode = task["scenario"]
+    if task["subtype"] == "document_lookup":
+        return document_reference(task)
+    if task["subtype"] == "inventory_check":
+        return inventory_reference(task)
     if task["subtype"] == "sales_analysis":
         rows = list(fixtures.values())
         regions = [row["region"] for row in rows]
@@ -82,13 +162,34 @@ def validate_multistep(task):
             for field, value in result.items():
                 if field.endswith("_usd") and (type(value) is not int or value < 0):
                     raise ValueError("Fixture amounts must be nonnegative integer dollars")
-        elif tool["name"] != "read_log_bundle" or args["bundle"] != result["bundle"] or args["request_id"] != task["trace"]["request_id"]:
-            raise ValueError("Log tool does not match its result")
+        elif task["subtype"] == "log_investigation":
+            if tool["name"] != "read_log_bundle" or args["bundle"] != result["bundle"] or args["request_id"] != task["trace"]["request_id"]:
+                raise ValueError("Log tool does not match its result")
+        elif task["subtype"] == "document_lookup":
+            if tool["name"] != "read_document_section" or args["document_id"] != result["document_id"] or args["section_id"] != result["section_id"]:
+                raise ValueError("Document tool does not match its section")
+            if not isinstance(result["content"], str) or not result["content"].strip():
+                raise ValueError("Empty document section")
+        elif task["subtype"] == "inventory_check":
+            expected_tool = {"sku_shortages": "get_item_inventory", "warehouse_pool": "get_warehouse_inventory",
+                             "arrival_cutoff": "get_inventory_and_arrivals"}[task["scenario"]]
+            if tool["name"] != expected_tool or args["item_id"] != result["item_id"] or args["snapshot"] != result["snapshot"]:
+                raise ValueError("Inventory tool does not match its result")
+            for field in ("on_hand", "reserved", "damaged", "demand", "incoming_units"):
+                if field in result and (type(result[field]) is not int or result[field] < 0):
+                    raise ValueError("Inventory quantities must be nonnegative integers")
+            if result["reserved"] + result["damaged"] > result["on_hand"]:
+                raise ValueError("Reserved and damaged stock exceed on-hand stock")
+        else:
+            raise ValueError("Unknown multistep subtype")
     if len(set(used)) != len(used) or set(used) != set(task["tool_fixtures"]):
         raise ValueError("Each fixture must be revealed once")
     expected = reference_answer(task)
     if task["evaluation"]["expected"] != expected:
         raise ValueError("Reference answer does not match fixture calculations")
+    if task["subtype"] == "document_lookup" and task["scenario"] == "section_chain":
+        if set(expected["section_chain"]) != {row["section_id"] for row in task["tool_fixtures"].values()}:
+            raise ValueError("Section chain does not use every document tool result")
     if task["subtype"] == "log_investigation":
         # Every tool contributes at least one event on the required chain.
         chain = set(expected["event_chain"])
@@ -105,7 +206,7 @@ def validate_multistep(task):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tasks", type=Path, default=Path(__file__).parent / "tasks/v1/multistep.jsonl")
-    parser.add_argument("--expected-count", type=int, default=20)
+    parser.add_argument("--expected-count", type=int, default=40)
     args = parser.parse_args()
     tasks = [json.loads(line) for line in args.tasks.read_text(encoding="utf-8").splitlines() if line.strip()]
     if len(tasks) != args.expected_count or len({t["task_id"] for t in tasks}) != len(tasks):

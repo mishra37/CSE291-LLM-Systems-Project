@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "dataset_version": "v1",
+  "status": "draft_development",
+  "total_tasks": 80,
+  "task_types": {
+    "long_context": 10,
+    "long_gen": 10,
+    "multistep": 40,
+    "short_qa": 20
+  },
+  "planned_model_calls": 252,
+  "planned_tool_calls": 172,
+  "checksum_method": "UTF-8 JSON per record, sort_keys=True, ensure_ascii=False, separators=(',', ':'), LF after each record; original record order retained.",
+  "files": [
+    {
+      "path": "short_qa.jsonl",
+      "tasks": 20,
+      "sha256_canonical_jsonl": "03b5b6e4362657f03f2d6f022a58b0fbd6cc96ab2785aea7fc46aa0b097a4aec"
+    },
+    {
+      "path": "long_context.jsonl",
+      "tasks": 10,
+      "sha256_canonical_jsonl": "081abbf7824445f64339b28ffefb04d7697c1f926f26f8c2e75a13f755e8d191"
+    },
+    {
+      "path": "long_generation.jsonl",
+      "tasks": 10,
+      "sha256_canonical_jsonl": "bb8d94b5882a61344337f16ae0378c8e00038b06b0cb52d61e7b10f3574650f2"
+    },
+    {
+      "path": "multistep.jsonl",
+      "tasks": 40,
+      "sha256_canonical_jsonl": "026adb864ac808c0f2d1ad5bc0335a52643e3b0c3d180cae191da82502f1a450"
+    }
+  ],
+  "measurement_status": "Task definitions validated offline. No inference results; runtime integration and deployed-server checks pending."
+}

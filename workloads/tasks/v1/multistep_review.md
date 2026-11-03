@@ -1,4 +1,6 @@
-# Multistep tasks: 10 sales and 10 log investigations
+# Multistep tasks: 40 workflows across four subtypes
+
+Ten tasks each cover sales analysis, log investigation, document lookup, and inventory checks.
 
 **Shared system instruction:** Use only tool results revealed so far. This workflow uses a fixed sequence of tools selected by the runner. On intermediate steps, briefly state current findings and missing information. Do not invent data or issue extra tools. On the final step, return only the requested JSON object without markdown fences or extra fields.
 
@@ -36,6 +38,26 @@ Parse final JSON and require every expected field and type, no extra fields, and
 | [multistep-logs-v1-008](#multistep-logs-v1-008) | search origin: INDEX_UNAVAILABLE; shuffled events and unrelated errors | 8 | 7 | 2272 |
 | [multistep-logs-v1-009](#multistep-logs-v1-009) | catalog origin: CONFIG_MISSING; shuffled events and unrelated errors | 8 | 7 | 2273 |
 | [multistep-logs-v1-010](#multistep-logs-v1-010) | pricing origin: RATE_TABLE_UNAVAILABLE; shuffled events and unrelated errors | 8 | 7 | 2275 |
+| [multistep-documents-v1-001](#multistep-documents-v1-001) | Follow 2 cross-referenced document sections | 3 | 2 | 916 |
+| [multistep-documents-v1-002](#multistep-documents-v1-002) | Ignore future revision; compare applicable revisions in shuffled order | 3 | 2 | 944 |
+| [multistep-documents-v1-003](#multistep-documents-v1-003) | Combine overlapping requirements across sites | 3 | 2 | 909 |
+| [multistep-documents-v1-004](#multistep-documents-v1-004) | Follow 4 cross-referenced document sections | 5 | 4 | 1416 |
+| [multistep-documents-v1-005](#multistep-documents-v1-005) | Ignore future revision; compare applicable revisions in shuffled order | 5 | 4 | 1460 |
+| [multistep-documents-v1-006](#multistep-documents-v1-006) | Union across four checklists; no security-review sites | 5 | 4 | 1401 |
+| [multistep-documents-v1-007](#multistep-documents-v1-007) | Applicable winner is revealed first; later excerpts do not override it | 5 | 4 | 1459 |
+| [multistep-documents-v1-008](#multistep-documents-v1-008) | Follow 7 cross-referenced document sections | 8 | 7 | 2167 |
+| [multistep-documents-v1-009](#multistep-documents-v1-009) | Ignore future revision; compare applicable revisions in shuffled order | 8 | 7 | 2235 |
+| [multistep-documents-v1-010](#multistep-documents-v1-010) | Combine overlapping requirements across sites | 8 | 7 | 2152 |
+| [multistep-inventory-v1-001](#multistep-inventory-v1-001) | One shortage and one exact balance | 3 | 2 | 905 |
+| [multistep-inventory-v1-002](#multistep-inventory-v1-002) | Pooled stock exactly meets demand | 3 | 2 | 920 |
+| [multistep-inventory-v1-003](#multistep-inventory-v1-003) | Arrival on deadline counts; next-day arrival does not | 3 | 2 | 994 |
+| [multistep-inventory-v1-004](#multistep-inventory-v1-004) | Zero demand and exact balances; no shortages | 5 | 4 | 1339 |
+| [multistep-inventory-v1-005](#multistep-inventory-v1-005) | All warehouse stock reserved or damaged | 5 | 4 | 1379 |
+| [multistep-inventory-v1-006](#multistep-inventory-v1-006) | Large late shipment cannot cover a current shortage | 5 | 4 | 1474 |
+| [multistep-inventory-v1-007](#multistep-inventory-v1-007) | Equal largest shortages with alphabetical tie-break | 5 | 4 | 1339 |
+| [multistep-inventory-v1-008](#multistep-inventory-v1-008) | Worst shortage revealed last | 8 | 7 | 1990 |
+| [multistep-inventory-v1-009](#multistep-inventory-v1-009) | Pool seven warehouses, including zero-usable-stock locations | 8 | 7 | 2063 |
+| [multistep-inventory-v1-010](#multistep-inventory-v1-010) | Mixed early, on-time, and late arrivals across seven SKUs | 8 | 7 | 2193 |
 
 ## multistep-sales-v1-001
 
@@ -2665,5 +2687,2030 @@ All scheduled tool results are now available. Use the complete history and retur
     "E1005",
     "E1006"
   ]
+}
+```
+
+
+## multistep-documents-v1-001
+
+**Task:** In fictional manual manual-01, follow the cross-references for Project-01, beginning at section S011. Continue until Next section is END. Report the terminal section's owner team and retention days, plus the ordered section chain from start to end. Return only JSON with owner_team, retention_days (integer), and section_chain.
+
+**Variation:** Follow 2 cross-referenced document sections
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-01", "section_id": "S011"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-01",
+  "section_id": "S011",
+  "content": "This section belongs to the fictional records manual for Project-01. Follow its cross-reference for the final storage instructions.\nProject: Project-01\nNext section: S012\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-01", "section_id": "S012"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-01",
+  "section_id": "S012",
+  "content": "This section belongs to the fictional records manual for Project-01. Follow its cross-reference for the final storage instructions.\nProject: Project-01\nNext section: END\nOwner team: Records-01\nRetention days: 45\nThis is the terminal section for these instructions."
+}
+```
+
+### Model call 3
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "owner_team": "Records-01",
+  "retention_days": 45,
+  "section_chain": [
+    "S011",
+    "S012"
+  ]
+}
+```
+
+
+## multistep-documents-v1-002
+
+**Task:** Read the supplied excerpts from fictional manual manual-02 for policy backup-02. As of 2026-10-31, select the highest revision number whose effective date is on or before that date; ignore future revisions. Report its revision number, retention days, and owner team as JSON with revision (integer), retention_days (integer), and owner_team. Read all supplied excerpts; tool arrival order does not indicate precedence.
+
+**Variation:** Ignore future revision; compare applicable revisions in shuffled order
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-02", "section_id": "S021"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-02",
+  "section_id": "S021",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-02\nRevision: 1\nEffective date: 2026-10-01\nRetention days: 120\nOwner team: Team-Blue"
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-02", "section_id": "S022"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-02",
+  "section_id": "S022",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-02\nRevision: 2\nEffective date: 2026-11-20\nRetention days: 14\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 3
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "revision": 1,
+  "retention_days": 120,
+  "owner_team": "Team-Blue"
+}
+```
+
+
+## multistep-documents-v1-003
+
+**Task:** Combine all site launch checklists supplied from fictional manual manual-03. List the union of required approval names without duplicates, count those unique names, and list the sites requiring security approval. Sort both lists alphabetically. Return only JSON with required_approvals, approval_count (integer), and sites_requiring_security_review. Use an empty array if no site needs security approval.
+
+**Variation:** Combine overlapping requirements across sites
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-03", "section_id": "S031"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-03",
+  "section_id": "S031",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-03-1\nRequired approvals: operations, security\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-03", "section_id": "S032"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-03",
+  "section_id": "S032",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-03-2\nRequired approvals: operations, legal\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 3
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "required_approvals": [
+    "legal",
+    "operations",
+    "security"
+  ],
+  "approval_count": 3,
+  "sites_requiring_security_review": [
+    "Site-03-1"
+  ]
+}
+```
+
+
+## multistep-documents-v1-004
+
+**Task:** In fictional manual manual-04, follow the cross-references for Project-04, beginning at section S041. Continue until Next section is END. Report the terminal section's owner team and retention days, plus the ordered section chain from start to end. Return only JSON with owner_team, retention_days (integer), and section_chain.
+
+**Variation:** Follow 4 cross-referenced document sections
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-04", "section_id": "S041"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-04",
+  "section_id": "S041",
+  "content": "This section belongs to the fictional records manual for Project-04. Follow its cross-reference for the final storage instructions.\nProject: Project-04\nNext section: S042\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-04", "section_id": "S042"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-04",
+  "section_id": "S042",
+  "content": "This section belongs to the fictional records manual for Project-04. Follow its cross-reference for the final storage instructions.\nProject: Project-04\nNext section: S043\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-04", "section_id": "S043"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-04",
+  "section_id": "S043",
+  "content": "This section belongs to the fictional records manual for Project-04. Follow its cross-reference for the final storage instructions.\nProject: Project-04\nNext section: S044\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-04", "section_id": "S044"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-04",
+  "section_id": "S044",
+  "content": "This section belongs to the fictional records manual for Project-04. Follow its cross-reference for the final storage instructions.\nProject: Project-04\nNext section: END\nOwner team: Records-04\nRetention days: 90\nThis is the terminal section for these instructions."
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "owner_team": "Records-04",
+  "retention_days": 90,
+  "section_chain": [
+    "S041",
+    "S042",
+    "S043",
+    "S044"
+  ]
+}
+```
+
+
+## multistep-documents-v1-005
+
+**Task:** Read the supplied excerpts from fictional manual manual-05 for policy backup-05. As of 2026-10-31, select the highest revision number whose effective date is on or before that date; ignore future revisions. Report its revision number, retention days, and owner team as JSON with revision (integer), retention_days (integer), and owner_team. Read all supplied excerpts; tool arrival order does not indicate precedence.
+
+**Variation:** Ignore future revision; compare applicable revisions in shuffled order
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-05", "section_id": "S053"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-05",
+  "section_id": "S053",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-05\nRevision: 3\nEffective date: 2026-10-03\nRetention days: 30\nOwner team: Team-Amber"
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-05", "section_id": "S052"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-05",
+  "section_id": "S052",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-05\nRevision: 2\nEffective date: 2026-10-02\nRetention days: 120\nOwner team: Team-Delta"
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-05", "section_id": "S051"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-05",
+  "section_id": "S051",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-05\nRevision: 1\nEffective date: 2026-10-01\nRetention days: 14\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-05", "section_id": "S054"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-05",
+  "section_id": "S054",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-05\nRevision: 4\nEffective date: 2026-11-20\nRetention days: 14\nOwner team: Team-Delta"
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "revision": 3,
+  "retention_days": 30,
+  "owner_team": "Team-Amber"
+}
+```
+
+
+## multistep-documents-v1-006
+
+**Task:** Combine all site launch checklists supplied from fictional manual manual-06. List the union of required approval names without duplicates, count those unique names, and list the sites requiring security approval. Sort both lists alphabetically. Return only JSON with required_approvals, approval_count (integer), and sites_requiring_security_review. Use an empty array if no site needs security approval.
+
+**Variation:** Union across four checklists; no security-review sites
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-06", "section_id": "S061"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-06",
+  "section_id": "S061",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-06-1\nRequired approvals: finance\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-06", "section_id": "S062"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-06",
+  "section_id": "S062",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-06-2\nRequired approvals: legal\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-06", "section_id": "S063"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-06",
+  "section_id": "S063",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-06-3\nRequired approvals: operations\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-06", "section_id": "S064"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-06",
+  "section_id": "S064",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-06-4\nRequired approvals: finance, legal\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "required_approvals": [
+    "finance",
+    "legal",
+    "operations"
+  ],
+  "approval_count": 3,
+  "sites_requiring_security_review": []
+}
+```
+
+
+## multistep-documents-v1-007
+
+**Task:** Read the supplied excerpts from fictional manual manual-07 for policy backup-07. As of 2026-10-31, select the highest revision number whose effective date is on or before that date; ignore future revisions. Report its revision number, retention days, and owner team as JSON with revision (integer), retention_days (integer), and owner_team. Read all supplied excerpts; tool arrival order does not indicate precedence.
+
+**Variation:** Applicable winner is revealed first; later excerpts do not override it
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-07", "section_id": "S073"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-07",
+  "section_id": "S073",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-07\nRevision: 3\nEffective date: 2026-10-03\nRetention days: 14\nOwner team: Team-Blue"
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-07", "section_id": "S072"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-07",
+  "section_id": "S072",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-07\nRevision: 2\nEffective date: 2026-10-02\nRetention days: 60\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-07", "section_id": "S071"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-07",
+  "section_id": "S071",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-07\nRevision: 1\nEffective date: 2026-10-01\nRetention days: 30\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-07", "section_id": "S074"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-07",
+  "section_id": "S074",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-07\nRevision: 4\nEffective date: 2026-11-20\nRetention days: 90\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "revision": 3,
+  "retention_days": 14,
+  "owner_team": "Team-Blue"
+}
+```
+
+
+## multistep-documents-v1-008
+
+**Task:** In fictional manual manual-08, follow the cross-references for Project-08, beginning at section S081. Continue until Next section is END. Report the terminal section's owner team and retention days, plus the ordered section chain from start to end. Return only JSON with owner_team, retention_days (integer), and section_chain.
+
+**Variation:** Follow 7 cross-referenced document sections
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S081"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S081",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: S082\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S082"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S082",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: S083\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S083"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S083",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: S084\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S084"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S084",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: S085\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 5
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S085"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S085",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: S086\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 6
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S086"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S086",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: S087\nThis section does not assign the final owner or retention period."
+}
+```
+
+### Model call 7
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-08", "section_id": "S087"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-08",
+  "section_id": "S087",
+  "content": "This section belongs to the fictional records manual for Project-08. Follow its cross-reference for the final storage instructions.\nProject: Project-08\nNext section: END\nOwner team: Records-08\nRetention days: 150\nThis is the terminal section for these instructions."
+}
+```
+
+### Model call 8
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "owner_team": "Records-08",
+  "retention_days": 150,
+  "section_chain": [
+    "S081",
+    "S082",
+    "S083",
+    "S084",
+    "S085",
+    "S086",
+    "S087"
+  ]
+}
+```
+
+
+## multistep-documents-v1-009
+
+**Task:** Read the supplied excerpts from fictional manual manual-09 for policy backup-09. As of 2026-10-31, select the highest revision number whose effective date is on or before that date; ignore future revisions. Report its revision number, retention days, and owner team as JSON with revision (integer), retention_days (integer), and owner_team. Read all supplied excerpts; tool arrival order does not indicate precedence.
+
+**Variation:** Ignore future revision; compare applicable revisions in shuffled order
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S093"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S093",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 3\nEffective date: 2026-10-03\nRetention days: 60\nOwner team: Team-Delta"
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S095"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S095",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 5\nEffective date: 2026-10-05\nRetention days: 90\nOwner team: Team-Blue"
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S091"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S091",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 1\nEffective date: 2026-10-01\nRetention days: 120\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S097"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S097",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 7\nEffective date: 2026-11-20\nRetention days: 30\nOwner team: Team-Delta"
+}
+```
+
+### Model call 5
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S092"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S092",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 2\nEffective date: 2026-10-02\nRetention days: 120\nOwner team: Team-Blue"
+}
+```
+
+### Model call 6
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S094"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S094",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 4\nEffective date: 2026-10-04\nRetention days: 90\nOwner team: Team-Cedar"
+}
+```
+
+### Model call 7
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-09", "section_id": "S096"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-09",
+  "section_id": "S096",
+  "content": "This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\nPolicy: backup-09\nRevision: 6\nEffective date: 2026-10-06\nRetention days: 14\nOwner team: Team-Delta"
+}
+```
+
+### Model call 8
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "revision": 6,
+  "retention_days": 14,
+  "owner_team": "Team-Delta"
+}
+```
+
+
+## multistep-documents-v1-010
+
+**Task:** Combine all site launch checklists supplied from fictional manual manual-10. List the union of required approval names without duplicates, count those unique names, and list the sites requiring security approval. Sort both lists alphabetically. Return only JSON with required_approvals, approval_count (integer), and sites_requiring_security_review. Use an empty array if no site needs security approval.
+
+**Variation:** Combine overlapping requirements across sites
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S101"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S101",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-1\nRequired approvals: finance\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 2
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S102"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S102",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-2\nRequired approvals: operations, security\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 3
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S103"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S103",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-3\nRequired approvals: operations, security, finance\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 4
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S104"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S104",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-4\nRequired approvals: security\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 5
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S105"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S105",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-5\nRequired approvals: finance, security\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 6
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S106"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S106",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-6\nRequired approvals: legal, finance, operations\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 7
+
+Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.
+
+**Next tool:** `read_document_section` with `{"document_id": "manual-10", "section_id": "S107"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "document_id": "manual-10",
+  "section_id": "S107",
+  "content": "This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\nSite: Site-10-7\nRequired approvals: legal\nCollect the complete set across every requested site before reporting."
+}
+```
+
+### Model call 8
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "required_approvals": [
+    "finance",
+    "legal",
+    "operations",
+    "security"
+  ],
+  "approval_count": 4,
+  "sites_requiring_security_review": [
+    "Site-10-2",
+    "Site-10-3",
+    "Site-10-4",
+    "Site-10-5"
+  ]
+}
+```
+
+
+## multistep-inventory-v1-001
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** One shortage and one exact balance
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU01-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU01-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 10,
+  "reserved": 2,
+  "damaged": 1,
+  "demand": 12
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU01-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU01-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 5,
+  "damaged": 0,
+  "demand": 15
+}
+```
+
+### Model call 3
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [
+    "SKU01-1"
+  ],
+  "total_shortage_units": 5,
+  "largest_shortage_sku": "SKU01-1"
+}
+```
+
+
+## multistep-inventory-v1-002
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. Pool usable stock of PART-02 from every supplied warehouse to meet demand of 40 units. Assume warehouse transfers are unrestricted. Return JSON with available_units, shortfall_units (max of zero and demand minus available), and warehouses_with_stock (alphabetically sorted warehouse IDs with positive usable stock). Use an empty array if none have usable stock.
+
+**Variation:** Pooled stock exactly meets demand
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH02-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH02-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 5,
+  "damaged": 0,
+  "warehouse": "WH02-1",
+  "sku": "PART-02"
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH02-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH02-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 40,
+  "reserved": 10,
+  "damaged": 5,
+  "warehouse": "WH02-2",
+  "sku": "PART-02"
+}
+```
+
+### Model call 3
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "available_units": 40,
+  "shortfall_units": 0,
+  "warehouses_with_stock": [
+    "WH02-1",
+    "WH02-2"
+  ]
+}
+```
+
+
+## multistep-inventory-v1-003
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. Add incoming_units to usable stock only when arrival_date is on or before 2026-10-31 (inclusive). Incoming units are not yet in on_hand and arrive usable and unreserved. Ignore later shipments. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** Arrival on deadline counts; next-day arrival does not
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU03-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU03-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 5,
+  "reserved": 0,
+  "damaged": 0,
+  "demand": 20,
+  "incoming_units": 15,
+  "arrival_date": "2026-10-31"
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU03-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU03-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 5,
+  "reserved": 0,
+  "damaged": 0,
+  "demand": 20,
+  "incoming_units": 15,
+  "arrival_date": "2026-11-01"
+}
+```
+
+### Model call 3
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [
+    "SKU03-2"
+  ],
+  "total_shortage_units": 15,
+  "largest_shortage_sku": "SKU03-2"
+}
+```
+
+
+## multistep-inventory-v1-004
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** Zero demand and exact balances; no shortages
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU04-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU04-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 15,
+  "reserved": 0,
+  "damaged": 15,
+  "demand": 0
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU04-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU04-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 83,
+  "reserved": 9,
+  "damaged": 3,
+  "demand": 71
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU04-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU04-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 89,
+  "reserved": 2,
+  "damaged": 1,
+  "demand": 86
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU04-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU04-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 45,
+  "reserved": 5,
+  "damaged": 4,
+  "demand": 36
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [],
+  "total_shortage_units": 0,
+  "largest_shortage_sku": ""
+}
+```
+
+
+## multistep-inventory-v1-005
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. Pool usable stock of PART-05 from every supplied warehouse to meet demand of 50 units. Assume warehouse transfers are unrestricted. Return JSON with available_units, shortfall_units (max of zero and demand minus available), and warehouses_with_stock (alphabetically sorted warehouse IDs with positive usable stock). Use an empty array if none have usable stock.
+
+**Variation:** All warehouse stock reserved or damaged
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH05-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH05-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 18,
+  "damaged": 2,
+  "warehouse": "WH05-1",
+  "sku": "PART-05"
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH05-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH05-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 18,
+  "damaged": 2,
+  "warehouse": "WH05-2",
+  "sku": "PART-05"
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH05-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH05-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 18,
+  "damaged": 2,
+  "warehouse": "WH05-3",
+  "sku": "PART-05"
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH05-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH05-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 18,
+  "damaged": 2,
+  "warehouse": "WH05-4",
+  "sku": "PART-05"
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "available_units": 0,
+  "shortfall_units": 50,
+  "warehouses_with_stock": []
+}
+```
+
+
+## multistep-inventory-v1-006
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. Add incoming_units to usable stock only when arrival_date is on or before 2026-10-31 (inclusive). Incoming units are not yet in on_hand and arrive usable and unreserved. Ignore later shipments. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** Large late shipment cannot cover a current shortage
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU06-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU06-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 83,
+  "reserved": 0,
+  "damaged": 3,
+  "demand": 75,
+  "incoming_units": 10,
+  "arrival_date": "2026-10-29"
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU06-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU06-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 36,
+  "reserved": 1,
+  "damaged": 0,
+  "demand": 35,
+  "incoming_units": 24,
+  "arrival_date": "2026-10-31"
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU06-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU06-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 36,
+  "reserved": 5,
+  "damaged": 1,
+  "demand": 45,
+  "incoming_units": 20,
+  "arrival_date": "2026-11-01"
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU06-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU06-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 0,
+  "reserved": 0,
+  "damaged": 0,
+  "demand": 30,
+  "incoming_units": 100,
+  "arrival_date": "2026-11-01"
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [
+    "SKU06-3",
+    "SKU06-4"
+  ],
+  "total_shortage_units": 45,
+  "largest_shortage_sku": "SKU06-4"
+}
+```
+
+
+## multistep-inventory-v1-007
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** Equal largest shortages with alphabetical tie-break
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU07-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU07-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 5,
+  "damaged": 0,
+  "demand": 30
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU07-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU07-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 5,
+  "damaged": 0,
+  "demand": 30
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU07-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU07-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 5,
+  "damaged": 0,
+  "demand": 15
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU07-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU07-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 20,
+  "reserved": 5,
+  "damaged": 0,
+  "demand": 10
+}
+```
+
+### Model call 5
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [
+    "SKU07-1",
+    "SKU07-2"
+  ],
+  "total_shortage_units": 30,
+  "largest_shortage_sku": "SKU07-1"
+}
+```
+
+
+## multistep-inventory-v1-008
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** Worst shortage revealed last
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 51,
+  "reserved": 4,
+  "damaged": 0,
+  "demand": 42
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 56,
+  "reserved": 2,
+  "damaged": 4,
+  "demand": 50
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 55,
+  "reserved": 9,
+  "damaged": 4,
+  "demand": 57
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 63,
+  "reserved": 1,
+  "damaged": 2,
+  "demand": 85
+}
+```
+
+### Model call 5
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-5", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-5",
+  "snapshot": "2026-10-25",
+  "on_hand": 86,
+  "reserved": 0,
+  "damaged": 2,
+  "demand": 79
+}
+```
+
+### Model call 6
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-6", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-6",
+  "snapshot": "2026-10-25",
+  "on_hand": 87,
+  "reserved": 9,
+  "damaged": 5,
+  "demand": 73
+}
+```
+
+### Model call 7
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_item_inventory` with `{"item_id": "SKU08-7", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU08-7",
+  "snapshot": "2026-10-25",
+  "on_hand": 0,
+  "reserved": 0,
+  "damaged": 0,
+  "demand": 100
+}
+```
+
+### Model call 8
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [
+    "SKU08-3",
+    "SKU08-4",
+    "SKU08-7"
+  ],
+  "total_shortage_units": 140,
+  "largest_shortage_sku": "SKU08-7"
+}
+```
+
+
+## multistep-inventory-v1-009
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. Pool usable stock of PART-09 from every supplied warehouse to meet demand of 100 units. Assume warehouse transfers are unrestricted. Return JSON with available_units, shortfall_units (max of zero and demand minus available), and warehouses_with_stock (alphabetically sorted warehouse IDs with positive usable stock). Use an empty array if none have usable stock.
+
+**Variation:** Pool seven warehouses, including zero-usable-stock locations
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 60,
+  "reserved": 0,
+  "damaged": 3,
+  "warehouse": "WH09-1",
+  "sku": "PART-09"
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 30,
+  "reserved": 25,
+  "damaged": 5,
+  "warehouse": "WH09-2",
+  "sku": "PART-09"
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 58,
+  "reserved": 0,
+  "damaged": 0,
+  "warehouse": "WH09-3",
+  "sku": "PART-09"
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 30,
+  "reserved": 25,
+  "damaged": 5,
+  "warehouse": "WH09-4",
+  "sku": "PART-09"
+}
+```
+
+### Model call 5
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-5", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-5",
+  "snapshot": "2026-10-25",
+  "on_hand": 69,
+  "reserved": 7,
+  "damaged": 2,
+  "warehouse": "WH09-5",
+  "sku": "PART-09"
+}
+```
+
+### Model call 6
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-6", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-6",
+  "snapshot": "2026-10-25",
+  "on_hand": 30,
+  "reserved": 25,
+  "damaged": 5,
+  "warehouse": "WH09-6",
+  "sku": "PART-09"
+}
+```
+
+### Model call 7
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_warehouse_inventory` with `{"item_id": "WH09-7", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "WH09-7",
+  "snapshot": "2026-10-25",
+  "on_hand": 66,
+  "reserved": 7,
+  "damaged": 2,
+  "warehouse": "WH09-7",
+  "sku": "PART-09"
+}
+```
+
+### Model call 8
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "available_units": 232,
+  "shortfall_units": 0,
+  "warehouses_with_stock": [
+    "WH09-1",
+    "WH09-3",
+    "WH09-5",
+    "WH09-7"
+  ]
+}
+```
+
+
+## multistep-inventory-v1-010
+
+**Task:** Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. Do not use reserved or damaged stock to meet new demand. Add incoming_units to usable stock only when arrival_date is on or before 2026-10-31 (inclusive). Incoming units are not yet in on_hand and arrive usable and unreserved. Ignore later shipments. For each supplied SKU, shortage is max(0, demand minus available usable units). Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.
+
+**Variation:** Mixed early, on-time, and late arrivals across seven SKUs
+
+### Model call 1
+
+Briefly state the plan and required inputs; no tool results are available yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-1", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-1",
+  "snapshot": "2026-10-25",
+  "on_hand": 75,
+  "reserved": 10,
+  "damaged": 5,
+  "demand": 55,
+  "incoming_units": 20,
+  "arrival_date": "2026-10-29"
+}
+```
+
+### Model call 2
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-2", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-2",
+  "snapshot": "2026-10-25",
+  "on_hand": 57,
+  "reserved": 7,
+  "damaged": 3,
+  "demand": 47,
+  "incoming_units": 24,
+  "arrival_date": "2026-10-31"
+}
+```
+
+### Model call 3
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-3", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-3",
+  "snapshot": "2026-10-25",
+  "on_hand": 71,
+  "reserved": 5,
+  "damaged": 1,
+  "demand": 80,
+  "incoming_units": 10,
+  "arrival_date": "2026-11-01"
+}
+```
+
+### Model call 4
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-4", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-4",
+  "snapshot": "2026-10-25",
+  "on_hand": 33,
+  "reserved": 1,
+  "damaged": 1,
+  "demand": 56,
+  "incoming_units": 24,
+  "arrival_date": "2026-10-29"
+}
+```
+
+### Model call 5
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-5", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-5",
+  "snapshot": "2026-10-25",
+  "on_hand": 49,
+  "reserved": 3,
+  "damaged": 2,
+  "demand": 39,
+  "incoming_units": 12,
+  "arrival_date": "2026-10-31"
+}
+```
+
+### Model call 6
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-6", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-6",
+  "snapshot": "2026-10-25",
+  "on_hand": 69,
+  "reserved": 10,
+  "damaged": 1,
+  "demand": 58,
+  "incoming_units": 20,
+  "arrival_date": "2026-11-01"
+}
+```
+
+### Model call 7
+
+Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.
+
+**Next tool:** `get_inventory_and_arrivals` with `{"item_id": "SKU10-7", "snapshot": "2026-10-25"}`
+
+**Result after configured delay:**
+
+```json
+{
+  "item_id": "SKU10-7",
+  "snapshot": "2026-10-25",
+  "on_hand": 46,
+  "reserved": 2,
+  "damaged": 5,
+  "demand": 54,
+  "incoming_units": 15,
+  "arrival_date": "2026-10-29"
+}
+```
+
+### Model call 8
+
+All scheduled tool results are now available. Use the complete history and return only the final JSON requested in the initial task.
+
+**Evaluator-only final answer:**
+
+```json
+{
+  "shortage_skus": [
+    "SKU10-3",
+    "SKU10-4"
+  ],
+  "total_shortage_units": 16,
+  "largest_shortage_sku": "SKU10-3"
 }
 ```

@@ -1,9 +1,9 @@
 # Fixed task collection
 
-`tasks/v1/` is a **draft development set** with 60 tasks: 20 short QA, 10 long-context
-QA, 10 long generation, and 20 multistep tasks (10 sales and 10 log investigations).
-The agreed target is 80 tasks. The remaining 20 multistep slots are reserved for
-document lookup and inventory checks.
+`tasks/v1/` now contains all **80 planned task definitions**: 20 short QA, 10
+long-context QA, 10 long generation, and 40 multistep tasks. The multistep tasks
+comprise 10 each of sales analysis, log investigation, document lookup, and
+inventory checks. This is a draft development set, not a completed experiment.
 It is not frozen and is not a held-out evaluation set.
 
 Two multistep examples are available separately in
@@ -19,7 +19,9 @@ Each task supplies a passage and asks one answerable question. It requires one
 model request, no tools, and a short extractive answer. The examples use 20
 different passages and source topics, covering entities, quantities, locations,
 years, terminology, a process, and a mathematical property. Passage lengths are
-74-158 whitespace-delimited words; these are word counts, not model token counts.
+74-158 whitespace-delimited words. Complete prompts contain 144-328 tokens using
+the pinned upstream Qwen tokenizer and the system/user format below, including
+ChatML. These measured counts are distinct from the passage word counts.
 
 - `tasks/v1/short_qa.jsonl`: canonical task records, including evaluator-only answers.
 - `tasks/v1/short_qa_review.md`: an index followed by every passage, question, and answer.
@@ -106,9 +108,9 @@ The authoring command uses the same pinned tokenizer as long-context generation
 and overwrites its two output files. For execution send the stored `system` and
 `prompt` directly as system/user messages; exclude all `evaluation` fields.
 
-## Multistep sales and log tasks
+## Multistep tasks
 
-- `tasks/v1/multistep.jsonl`: 10 sales-analysis and 10 log-investigation tasks.
+- `tasks/v1/multistep.jsonl`: 40 tasks across sales, logs, documents, and inventory.
 - `tasks/v1/multistep_review.md`: all model steps, tool arguments/results, and final references.
 - `build_multistep.py`: seeded construction, retaining the two original preview fixtures.
 - `multistep.py`: reference calculations and offline workflow validation.
@@ -120,6 +122,14 @@ Sales scenarios cover net totals, alphabetical tie-breaking, negative net sales,
 target shortfalls, and period changes (including all-negative changes). Log tasks
 follow explicit cause links through varied components, ignoring shuffled unrelated
 events and same-request events that are not on the starting event's chain.
+Document tasks follow cross-referenced sections, select the highest policy
+revision effective on an explicit date while ignoring future revisions, or
+combine approval requirements across site checklists. The generated documents
+are fictional labeled prose; references are extracted from the same visible
+text the model receives. Inventory tasks distinguish usable, reserved, and
+damaged stock; pool stock across warehouses; or count incoming shipments only
+if they arrive by an inclusive deadline. Cases include no shortages, exact
+balances, tied largest shortages, and late shipments that cannot satisfy demand.
 
 The runner must reveal one result after each prescribed tool operation, retain
 the complete history, and generate each model response. Tool order is scripted;
@@ -150,21 +160,31 @@ preview files. Preserve the same task version across scheduler comparisons.
 
 ## Review and validation
 
-Run the offline structural and answer-span checks from the repository root:
+Validate the complete collection from the repository root:
 
 ```bash
-python workloads/validate_tasks.py
+python -m workloads.validate_collection
 ```
 
-These checks verify that records are well formed and every labeled answer exactly
-matches the passage at its recorded character offset. They cannot establish that
-a question is unambiguous or that its answer is semantically correct. Read the
-examples in `short_qa_review.md` and flag concerns by task ID. There is no review
-checklist, sign-off sheet, or approval gate. After corrections, rerun validation
-and update the readable copy to match the canonical records.
+This checks the 80 unique IDs, family counts, QA answer spans, writing rubrics,
+multistep fixture calculations and call counts, and the manifest checksums.
+`tasks/v1/manifest.json` records all four input files with checksums of canonical
+JSON, insensitive to Git line-ending conversions. One complete replay plans
+252 model calls and 172 tool calls if every task reaches its final step.
 
-No AWS inference has been performed. Short-QA tokenizer checks remain pending;
-long-context and long-generation tasks have upstream tokenizer measurements.
+After intentional task changes, update the corresponding readable copy and run
+`python -m workloads.validate_collection --write-manifest` to refresh the draft
+manifest. Keep an unchanged version for comparative experiments.
+
+These checks cannot establish model accuracy or eliminate every ambiguity.
+Read the family review files and flag concerns by task ID. There is no review
+checklist, sign-off sheet, or approval gate. The separate family validators
+remain available; `python workloads/validate_tasks.py` checks short QA by default.
+
+No AWS inference has been performed for this collection. Short QA, long-context
+QA, and long generation have upstream tokenizer measurements; multistep budgets
+include allowances for model replies that have not yet been generated.
+Deployed-server tokenization and fit checks remain pending for every family.
 Do not treat word counts or valid answer offsets as proof of deployed-server fit.
 
 ## Execution contract (next integration step)

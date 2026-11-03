@@ -1,4 +1,4 @@
-"""Build 10 sales and 10 log workflows; no model inference or runtime tools.
+"""Build 40 workflows across sales, logs, documents, and inventory; no inference.
 
 python -m workloads.build_multistep --tokenizer /path/to/qwen-tokenizer.json
 """
@@ -21,6 +21,12 @@ SALES_SPECS = [(4, "net_total"), (2, "net_total"), (2, "net_total"), (2, "target
                (4, "period_change"), (4, "target_gap"), (4, "period_change"),
                (7, "net_total"), (7, "target_gap"), (7, "period_change")]
 LOG_COUNTS = [2, 2, 2, 4, 4, 4, 4, 7, 7, 7]
+DOCUMENT_MODES = ["section_chain", "effective_revision", "approval_union", "section_chain",
+                  "effective_revision", "approval_union", "effective_revision", "section_chain",
+                  "effective_revision", "approval_union"]
+INVENTORY_MODES = ["sku_shortages", "warehouse_pool", "arrival_cutoff", "sku_shortages",
+                  "warehouse_pool", "arrival_cutoff", "sku_shortages", "sku_shortages",
+                  "warehouse_pool", "arrival_cutoff"]
 ORIGINS = [("database", "POOL_EXHAUSTED"), ("cache", "CONNECTION_REFUSED"),
            ("payment", "UPSTREAM_TIMEOUT"), ("auth", "SIGNING_KEY_UNAVAILABLE"),
            ("inventory", "STOCK_LOCK_TIMEOUT"), ("database", "DEADLOCK_DETECTED"),
@@ -147,6 +153,138 @@ def log_task(index, n_tools, preview):
     return task
 
 
+def document_task(index, n_tools, mode):
+    rng = random.Random(291300 + index)
+    task = base(f"multistep-documents-v1-{index:03d}", "document_lookup", mode, n_tools, 291300 + index)
+    document_id, project = f"manual-{index:02d}", f"Project-{index:02d}"
+    fixtures, calls = {}, []
+    for i in range(n_tools):
+        section_id = f"S{index:02d}{i + 1}"
+        if mode == "section_chain":
+            next_id = f"S{index:02d}{i + 2}" if i < n_tools - 1 else "END"
+            content = (f"This section belongs to the fictional records manual for {project}. Follow its cross-reference for the final storage instructions.\n"
+                       f"Project: {project}\nNext section: {next_id}\n")
+            if next_id == "END":
+                content += f"Owner team: Records-{index:02d}\nRetention days: {30 + 15 * index}\nThis is the terminal section for these instructions."
+            else:
+                content += "This section does not assign the final owner or retention period."
+        elif mode == "effective_revision":
+            effective = f"2026-10-{i + 1:02d}" if i < n_tools - 1 else "2026-11-20"
+            content = ("This fictional policy excerpt applies only from its effective date. Revision numbers indicate precedence among applicable revisions.\n"
+                       f"Policy: backup-{index:02d}\nRevision: {i + 1}\nEffective date: {effective}\n"
+                       f"Retention days: {rng.choice([14, 30, 60, 90, 120])}\nOwner team: Team-{rng.choice(['Amber', 'Blue', 'Cedar', 'Delta'])}")
+        else:
+            required = rng.sample(["finance", "legal", "operations", "security"], 1 + i % 3)
+            if index == 3:  # Two sites with overlapping approvals, one requiring security.
+                required = [["operations", "security"], ["operations", "legal"]][i]
+            if index == 6:  # No security approval anywhere; an empty result list is correct.
+                required = [["finance"], ["legal"], ["operations"], ["finance", "legal"]][i]
+            content = ("This fictional launch checklist specifies approvals required by this site. Repeated approval names across sites describe the same approval type.\n"
+                       f"Site: Site-{index:02d}-{i + 1}\nRequired approvals: {', '.join(required)}\n"
+                       "Collect the complete set across every requested site before reporting.")
+        fixtures[section_id] = {"document_id": document_id, "section_id": section_id, "content": content}
+    order = list(fixtures)
+    if mode == "effective_revision":
+        rng.shuffle(order)
+        if index == 7:
+            newest_valid = f"S{index:02d}{n_tools - 1}"
+            order.remove(newest_valid)
+            order.insert(0, newest_valid)
+    calls = [{"name": "read_document_section", "arguments": {"document_id": document_id, "section_id": key}, "fixture_key": key} for key in order]
+    task["tool_fixtures"] = fixtures
+    if mode == "section_chain":
+        task["document_query"] = {"project": project, "start_section": f"S{index:02d}1"}
+        task["initial_prompt"] = (f"In fictional manual {document_id}, follow the cross-references for {project}, beginning at section S{index:02d}1. "
+                                  "Continue until Next section is END. Report the terminal section's owner team and retention days, plus the ordered section chain from start to end. "
+                                  "Return only JSON with owner_team, retention_days (integer), and section_chain.")
+        task["diversity_note"] = f"Follow {n_tools} cross-referenced document sections"
+    elif mode == "effective_revision":
+        task["document_query"] = {"policy": f"backup-{index:02d}", "as_of": "2026-10-31"}
+        task["initial_prompt"] = (f"Read the supplied excerpts from fictional manual {document_id} for policy backup-{index:02d}. "
+                                  "As of 2026-10-31, select the highest revision number whose effective date is on or before that date; ignore future revisions. "
+                                  "Report its revision number, retention days, and owner team as JSON with revision (integer), retention_days (integer), and owner_team. "
+                                  "Read all supplied excerpts; tool arrival order does not indicate precedence.")
+        task["diversity_note"] = "Ignore future revision; compare applicable revisions in shuffled order" if index != 7 else "Applicable winner is revealed first; later excerpts do not override it"
+    else:
+        task["document_query"] = {"sites": [f"Site-{index:02d}-{i + 1}" for i in range(n_tools)]}
+        task["initial_prompt"] = (f"Combine all site launch checklists supplied from fictional manual {document_id}. "
+                                  "List the union of required approval names without duplicates, count those unique names, and list the sites requiring security approval. "
+                                  "Sort both lists alphabetically. Return only JSON with required_approvals, approval_count (integer), and sites_requiring_security_review. "
+                                  "Use an empty array if no site needs security approval.")
+        task["diversity_note"] = "Combine overlapping requirements across sites" if index != 6 else "Union across four checklists; no security-review sites"
+    make_steps(task, calls, "Update the document findings from all revealed sections. Apply the specified cross-reference, revision, or set-combination rule. Note missing sections; do not finalize yet.")
+    return task
+
+
+def inventory_task(index, n_tools, mode):
+    rng = random.Random(291400 + index)
+    task = base(f"multistep-inventory-v1-{index:03d}", "inventory_check", mode, n_tools, 291400 + index)
+    fixtures, calls = {}, []
+    for i in range(n_tools):
+        key = f"WH{index:02d}-{i + 1}" if mode == "warehouse_pool" else f"SKU{index:02d}-{i + 1}"
+        on_hand, reserved, damaged = rng.randint(30, 90), rng.randint(0, 10), rng.randint(0, 5)
+        row = {"item_id": key, "snapshot": "2026-10-25", "on_hand": on_hand, "reserved": reserved, "damaged": damaged}
+        if mode == "warehouse_pool":
+            row.update(warehouse=key, sku=f"PART-{index:02d}")
+            if index == 2:
+                row.update(on_hand=[20, 40][i], reserved=[5, 10][i], damaged=[0, 5][i])
+            if index == 5:
+                row.update(on_hand=20, reserved=18, damaged=2)
+            if index == 9 and i % 2:
+                row.update(on_hand=30, reserved=25, damaged=5)
+            name = "get_warehouse_inventory"
+        else:
+            row["demand"] = max(0, on_hand - reserved - damaged + [-5, 0, 15, 25][i % 4])
+            if index == 1:
+                row.update(on_hand=[10, 20][i], reserved=[2, 5][i], damaged=[1, 0][i], demand=[12, 15][i])
+            if index == 4:
+                row["demand"] = on_hand - reserved - damaged
+                if i == 0:
+                    row.update(on_hand=15, reserved=0, damaged=15, demand=0)
+            if index == 7:
+                row.update(on_hand=20, reserved=5, damaged=0, demand=[30, 30, 15, 10][i])
+            if index == 8 and i == n_tools - 1:
+                row.update(on_hand=0, reserved=0, damaged=0, demand=100)
+            name = "get_item_inventory"
+            if mode == "arrival_cutoff":
+                row.update(incoming_units=rng.randint(10, 25), arrival_date=["2026-10-29", "2026-10-31", "2026-11-01"][i % 3])
+                if index == 3:
+                    row.update(on_hand=5, reserved=0, damaged=0, demand=20, incoming_units=15,
+                               arrival_date=["2026-10-31", "2026-11-01"][i])
+                if index == 6 and i == n_tools - 1:
+                    row.update(on_hand=0, reserved=0, damaged=0, demand=30, incoming_units=100, arrival_date="2026-11-01")
+                name = "get_inventory_and_arrivals"
+        fixtures[key] = row
+        calls.append({"name": name, "arguments": {"item_id": key, "snapshot": "2026-10-25"}, "fixture_key": key})
+    task["tool_fixtures"] = fixtures
+    common = ("Use the fictional inventory snapshots dated 2026-10-25. All quantities are integer units. "
+              "Usable stock is on_hand minus reserved minus damaged; reserved and damaged categories do not overlap. "
+              "Do not use reserved or damaged stock to meet new demand. ")
+    if mode == "warehouse_pool":
+        demand = 40 if index == 2 else 50 if index == 5 else 100
+        task["inventory_query"] = {"sku": f"PART-{index:02d}", "demand": demand}
+        task["initial_prompt"] = common + (f"Pool usable stock of PART-{index:02d} from every supplied warehouse to meet demand of {demand} units. "
+                                           "Assume warehouse transfers are unrestricted. Return JSON with available_units, shortfall_units (max of zero and demand minus available), "
+                                           "and warehouses_with_stock (alphabetically sorted warehouse IDs with positive usable stock). Use an empty array if none have usable stock.")
+    else:
+        task["inventory_query"] = {"items": list(fixtures)}
+        extra = ""
+        if mode == "arrival_cutoff":
+            task["inventory_query"]["deadline"] = "2026-10-31"
+            extra = ("Add incoming_units to usable stock only when arrival_date is on or before 2026-10-31 (inclusive). "
+                     "Incoming units are not yet in on_hand and arrive usable and unreserved. Ignore later shipments. ")
+        task["initial_prompt"] = common + extra + ("For each supplied SKU, shortage is max(0, demand minus available usable units). "
+                                                    "Stock from one SKU cannot satisfy another SKU's demand. Return JSON with shortage_skus (alphabetically sorted IDs with positive shortage), "
+                                                    "total_shortage_units, and largest_shortage_sku. Break largest-shortage ties alphabetically; use an empty string for largest_shortage_sku if there are no shortages.")
+    task["diversity_note"] = {1: "One shortage and one exact balance", 2: "Pooled stock exactly meets demand",
+                              3: "Arrival on deadline counts; next-day arrival does not", 4: "Zero demand and exact balances; no shortages",
+                              5: "All warehouse stock reserved or damaged", 6: "Large late shipment cannot cover a current shortage",
+                              7: "Equal largest shortages with alphabetical tie-break", 8: "Worst shortage revealed last",
+                              9: "Pool seven warehouses, including zero-usable-stock locations", 10: "Mixed early, on-time, and late arrivals across seven SKUs"}[index]
+    make_steps(task, calls, "Update available stock and shortages using all revealed snapshots. Respect reservations, damage, and any arrival cutoff. Keep item identities separate; do not finalize yet.")
+    return task
+
+
 def attach_evaluation_and_length(task, tokenizer):
     expected = reference_answer(task)
     task["evaluation"] = {"method": "structured_json_exact", "expected": expected,
@@ -184,6 +322,8 @@ def build(tokenizer):
     previews = [json.loads(line) for line in preview_path.read_text(encoding="utf-8").splitlines()]
     tasks = [sales_task(i, n, scenario, previews[0]) for i, (n, scenario) in enumerate(SALES_SPECS, 1)]
     tasks += [log_task(i, n, previews[1]) for i, n in enumerate(LOG_COUNTS, 1)]
+    tasks += [document_task(i, n, mode) for i, (n, mode) in enumerate(zip(LOG_COUNTS, DOCUMENT_MODES), 1)]
+    tasks += [inventory_task(i, n, mode) for i, (n, mode) in enumerate(zip(LOG_COUNTS, INVENTORY_MODES), 1)]
     for task in tasks:
         attach_evaluation_and_length(task, tokenizer)
     return tasks
@@ -192,7 +332,8 @@ def build(tokenizer):
 def write_outputs(tasks, out):
     out.mkdir(parents=True, exist_ok=True)
     (out / "multistep.jsonl").write_text("".join(json.dumps(t, ensure_ascii=False) + "\n" for t in tasks), encoding="utf-8", newline="\n")
-    parts = ["# Multistep tasks: 10 sales and 10 log investigations\n",
+    parts = ["# Multistep tasks: 40 workflows across four subtypes\n",
+             "Ten tasks each cover sales analysis, log investigation, document lookup, and inventory checks.\n",
              f"**Shared system instruction:** {SYSTEM}\n",
              "Each subtype has three tasks with 2 tools, four with 4 tools, and three with 7 tools (3, 5, or 8 model calls). The two approved preview fixtures are retained in task 001 of their subtype.\n",
              "These are scripted workflows: tool order is fixed, but model replies are generated during an eventual run. Histories retain all earlier results and replies. Added tool delay defaults to 2 seconds and can be varied independently.\n",
