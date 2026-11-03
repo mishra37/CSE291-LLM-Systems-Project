@@ -1,0 +1,2 @@
+# Only needed to regenerate/token-check the synthetic documents; not to read or score tasks.
+tokenizers==0.22.1
