@@ -17,9 +17,10 @@ declare -A CONFIGS=(
 )
 for TAG in gpuonly ramcache; do
   SERVER_ARGS="${CONFIGS[$TAG]}"
-  # shellcheck disable=SC2086
-  CTX=$CTX NP=$K bash setup/launch_server.sh $SERVER_ARGS
   for SCHED in fifo_request fifo_task; do
+    # restart before every run so no run inherits the previous run's warm cache
+    # shellcheck disable=SC2086
+    CTX=$CTX NP=$K bash setup/launch_server.sh $SERVER_ARGS
     $PY -m runner.run --workload workloads/generated/pilot.jsonl --sched $SCHED -k $K \
         --server-args "-c $CTX -np $K $SERVER_ARGS" --name "pilot_${TAG}_${SCHED}_k${K}"
   done

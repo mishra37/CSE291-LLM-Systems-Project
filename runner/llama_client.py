@@ -46,15 +46,16 @@ class LlamaClient:
                 out[name[len("llamacpp:"):]] = float(value)
         return out
 
-    async def complete(self, prompt, max_tokens, slot=-1, clock=time.monotonic):
-        """Stream one completion. Output length is fixed (ignore_eos) so runs are comparable.
+    async def complete(self, prompt, max_tokens, slot=-1, clock=time.monotonic, ignore_eos=True, temperature=0.0):
+        """Stream one completion. Synthetic workloads force a fixed output length (ignore_eos)
+        so runs are comparable; the fixed task collection stops naturally (ignore_eos=False).
 
         Returns {status, error, text, t_first_token, t_done, final}; `final` is llama.cpp's last
-        stream message (timings, id_slot, truncated, ...). status is ok | http_<code> | error |
-        timeout | conn_error.
+        stream message (timings, id_slot, truncated, ...), empty if it never arrived. status is
+        ok | http_<code> | error | timeout | conn_error.
         """
-        payload = {"prompt": prompt, "n_predict": max_tokens, "ignore_eos": True,
-                   "cache_prompt": True, "temperature": 0.0, "stream": True, "id_slot": slot}
+        payload = {"prompt": prompt, "n_predict": max_tokens, "ignore_eos": ignore_eos,
+                   "cache_prompt": True, "temperature": temperature, "stream": True, "id_slot": slot}
         out = {"status": "ok", "error": "", "text": "", "t_first_token": None, "final": {}}
         pieces, buf = [], b""
         try:

@@ -9,6 +9,8 @@ Writes results/raw/<name>/:
   tasks.csv     one row per agent task (completion time split into queue / model / tool time)
   memory.csv    GPU memory + utilization and llama-server RSS, sampled every --sample-ms
   metrics.csv   llama-server /metrics, polled every second
+  outputs.jsonl     every step's response text, per task
+  predictions.jsonl one final result per task, in the evaluation/ scorer schema
   summary.json  headline numbers (also printed)
 """
 import argparse
@@ -66,10 +68,10 @@ async def poll_metrics(client, clock, rows, stop):
         await asyncio.sleep(1.0)
 
 
-async def run_task(task, sched, clock, req_rows, task_rows):
+async def run_task(task, sched, clock, req_rows, task_rows, outputs):
     await asyncio.sleep(max(0.0, task["arrival_s"] - clock()))
     t_arrive = clock()
-    status, tool_s, messages = "ok", 0.0, []
+    status, tool_s, messages, texts, last = "ok", 0.0, [], [], None
     async with sched.task(task) as ticket:
         t_admit = clock()
         for i, step in enumerate(task["steps"]):
@@ -77,8 +79,11 @@ async def run_task(task, sched, clock, req_rows, task_rows):
                 await asyncio.sleep(step["tool_delay_s"])
                 tool_s += step["tool_delay_s"]
             messages.append(("user", step["user"]))
-            req = {"prompt": chatml(task["system"], messages), "max_tokens": step["max_tokens"]}
+            req = {"prompt": chatml(task["system"], messages), "max_tokens": step["max_tokens"],
+                   "ignore_eos": step.get("ignore_eos", True), "temperature": step.get("temperature", 0.0)}
             res = await sched.request(req, ticket)
+            texts.append(res["text"])
+            last = res
             final, timings = res["final"], res["final"].get("timings", {})
             gen = timings.get("predicted_n", final.get("tokens_predicted", 0))
             req_rows.append({
@@ -92,7 +97,7 @@ async def run_task(task, sched, clock, req_rows, task_rows):
                 "latency_s": round(res["t_done"] - req["t_enqueue"], 4),
                 "prompt_tokens": timings.get("prompt_n"),   # prompt tokens actually computed
                 "cached_tokens": timings.get("cache_n"),    # prompt tokens reused from KV cache
-                "gen_tokens": gen, "max_tokens": step["max_tokens"],
+                "gen_tokens": gen, "max_tokens": step["max_tokens"], "ignore_eos": req["ignore_eos"],
                 "prefill_ms": timings.get("prompt_ms"), "decode_ms": timings.get("predicted_ms"),
                 "slot": final.get("id_slot"), "truncated": final.get("truncated"),
                 "stop_type": final.get("stop_type"),
@@ -103,9 +108,18 @@ async def run_task(task, sched, clock, req_rows, task_rows):
             messages.append(("assistant", res["text"]))
     t_done = clock()
     mine = [r for r in req_rows if r["task_id"] == task["task_id"]]
+    steps_done = sum(r["status"] == "ok" for r in mine)
+    outputs.append({
+        "task_id": task["task_id"], "type": task["type"], "status": status, "steps_done": steps_done,
+        # the final stream message (stop=true) must have arrived for the last executed step
+        "response_complete": bool(last and last["final"].get("stop")),
+        "truncated": any(bool(r["truncated"]) for r in mine),
+        "stop_type": last["final"].get("stop_type") if last else None,
+        "text": texts[-1] if texts else "", "step_texts": texts,
+    })
     task_rows.append({
         "task_id": task["task_id"], "type": task["type"], "n_steps": len(task["steps"]),
-        "steps_done": sum(r["status"] == "ok" for r in mine), "status": status,
+        "steps_done": steps_done, "status": status,
         "arrival_s": task["arrival_s"], "t_arrive": round(t_arrive, 4), "t_done": round(t_done, 4),
         "latency_s": round(t_done - t_arrive, 4),
         "admit_wait_s": round(t_admit - t_arrive, 4),
@@ -149,11 +163,21 @@ def summarize(req_rows, task_rows, mem_rows, makespan):
         "throughput_tasks_per_s": round(len(ok) / makespan, 4) if makespan else None,
         "throughput_gen_tok_per_s": round(sum(r["gen_tokens"] or 0 for r in ok_req) / makespan, 2) if makespan else None,
         "prefix_cache_hit_ratio": round(cached / max(1, prompt + cached), 4),
-        "short_outputs": sum((r["gen_tokens"] or 0) < r["max_tokens"] for r in ok_req),
+        # only meaningful for forced-length requests; natural-EOS requests stop when done
+        "short_outputs": sum((r["gen_tokens"] or 0) < r["max_tokens"] for r in ok_req if r["ignore_eos"]),
         "peak_gpu_mem_mb": max((m["gpu_mem_mb"] for m in mem_rows), default=None),
         "peak_server_rss_mb": max((m["server_rss_mb"] or 0 for m in mem_rows), default=None),
         "by_type": by_type,
     }
+
+
+PREDICTION_FIELDS = ("task_id", "status", "steps_done", "response_complete", "truncated", "text")
+
+
+def write_jsonl(path, rows):
+    with open(path, "w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def write_csv(path, rows):
@@ -190,8 +214,8 @@ async def main(args):
         metric_rows, stop = [], asyncio.Event()
         poller = asyncio.ensure_future(poll_metrics(client, clock, metric_rows, stop))
 
-        req_rows, task_rows = [], []
-        await asyncio.gather(*(run_task(t, sched, clock, req_rows, task_rows) for t in tasks))
+        req_rows, task_rows, outputs = [], [], []
+        await asyncio.gather(*(run_task(t, sched, clock, req_rows, task_rows, outputs) for t in tasks))
         makespan = clock()
 
         stop.set()
@@ -216,6 +240,10 @@ async def main(args):
     write_csv(out / "tasks.csv", sorted(task_rows, key=lambda r: r["t_arrive"]))
     write_csv(out / "memory.csv", sampler.rows)
     write_csv(out / "metrics.csv", metric_rows)
+    order = {t["task_id"]: i for i, t in enumerate(tasks)}
+    outputs.sort(key=lambda o: order[o["task_id"]])
+    write_jsonl(out / "outputs.jsonl", outputs)
+    write_jsonl(out / "predictions.jsonl", [{k: o[k] for k in PREDICTION_FIELDS} for o in outputs])
     print(json.dumps(summary, indent=2))
     print(f"results in {out}")
 
