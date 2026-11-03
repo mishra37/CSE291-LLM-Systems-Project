@@ -1,9 +1,17 @@
 # Fixed task collection
 
-`tasks/v1/` is a **draft development set** with 20 short-QA, 10 long-context QA,
-and 10 long-generation examples prepared. The agreed target is 80 tasks: these
-40 single-call tasks plus 40 multistep tasks, which are not yet populated.
+`tasks/v1/` is a **draft development set** with 60 tasks: 20 short QA, 10 long-context
+QA, 10 long generation, and 20 multistep tasks (10 sales and 10 log investigations).
+The agreed target is 80 tasks. The remaining 20 multistep slots are reserved for
+document lookup and inventory checks.
 It is not frozen and is not a held-out evaluation set.
+
+Two multistep examples are available separately in
+[`tasks/previews/multistep_review.md`](tasks/previews/multistep_review.md), with
+machine-readable definitions in `tasks/previews/multistep.jsonl`. These are
+the original sales and log examples. Their fixtures are preserved in the first
+task of each subtype in the expanded collection. Runtime tools, runner integration,
+and the structured-output scorer are still pending.
 
 ## Short QA
 
@@ -97,6 +105,48 @@ python workloads/validate_tasks.py --tasks workloads/tasks/v1/long_generation.js
 The authoring command uses the same pinned tokenizer as long-context generation
 and overwrites its two output files. For execution send the stored `system` and
 `prompt` directly as system/user messages; exclude all `evaluation` fields.
+
+## Multistep sales and log tasks
+
+- `tasks/v1/multistep.jsonl`: 10 sales-analysis and 10 log-investigation tasks.
+- `tasks/v1/multistep_review.md`: all model steps, tool arguments/results, and final references.
+- `build_multistep.py`: seeded construction, retaining the two original preview fixtures.
+- `multistep.py`: reference calculations and offline workflow validation.
+
+Each subtype has three tasks with 2 tools, four with 4 tools, and three with 7
+tools: 3, 5, or 8 model calls respectively. Every tool has an illustrative
+two-second added delay that can be overridden independently for experiments.
+Sales scenarios cover net totals, alphabetical tie-breaking, negative net sales,
+target shortfalls, and period changes (including all-negative changes). Log tasks
+follow explicit cause links through varied components, ignoring shuffled unrelated
+events and same-request events that are not on the starting event's chain.
+
+The runner must reveal one result after each prescribed tool operation, retain
+the complete history, and generate each model response. Tool order is scripted;
+these tasks do not implement model-directed tool selection. Wrong intermediate
+answers do not cancel remaining work. Tool exceptions are execution failures.
+These files are task definitions and fixtures, not an executable tool runtime.
+
+Every output is capped at 128 tokens with natural EOS. Token budget estimates
+range from 835 to 2,275 tokens, including allowances for earlier replies, the
+final output, and a 128-token margin. Known prompt material is tokenized with
+the pinned Qwen tokenizer, but actual history size depends on model responses;
+verify the estimates against the deployed runtime before experiments. Static
+reference JSON fits within the final output cap for every task.
+
+Final answers are structured JSON with exact typed fields. Object key order and
+whitespace do not matter; extra fields fail and arrays follow the requested order.
+Reference calculations are implemented; judging actual saved model outputs is
+not yet connected. No AWS accuracy or performance results exist for these tasks.
+
+```bash
+python -m workloads.build_multistep --tokenizer /path/to/tokenizer.json
+python -m workloads.multistep --tasks workloads/tasks/v1/multistep.jsonl
+```
+
+The authoring command overwrites the expanded multistep data and readable file;
+it reads the original preview records as source fixtures. It never changes the
+preview files. Preserve the same task version across scheduler comparisons.
 
 ## Review and validation
 
