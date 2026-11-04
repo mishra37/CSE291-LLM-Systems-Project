@@ -25,6 +25,8 @@ memory, so that more tasks finish without running out of memory?
     with 60/60 workflows completed; its strict multistep accuracy was 13/30
   - a repeatable [Phase 1 FIFO protocol](docs/phase1_protocol.md) with a fresh
     server for each run, fixed `NP` during a `K` sweep, and per-type reporting
+  - an [audit of the earlier v1 sweeps](docs/v1_sweep_audit.md), including
+    scorer checks and limits on what their plots establish
 - **Not done yet:**
   - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
   - repeat runs of the sweeps (each sweep config ran once)
@@ -130,7 +132,7 @@ every run sees exactly the same inputs.
   count as wrong.
 
 There is also an older synthetic generator, [workloads/generate.py](workloads/generate.py),
-which uses filler text with exact input and output lengths. It's useful for sweeps
+which uses filler text with approximate input lengths and forced output limits. It's useful for sweeps
 (for example "make every context 8k tokens"), but has no right answers.
 
 ## Results so far
@@ -150,6 +152,7 @@ which uses filler text with exact input and output lengths. It's useful for swee
 | Short QA correct | 19/20 | 19/20 | 19/20 | 19/20 | 19/20 |
 | Long-context QA correct | 9/10 | 9/10 | 9/10 | 9/10 | 9/10 |
 | Multi-step correct | 9/40 | 9/40 | 10/40 | 12/40 | 12/40 |
+| Writing within word range | 1/10 | 3/10 | 2/10 | 3/10 | 4/10 |
 
 **What this tells us:**
 
@@ -166,20 +169,21 @@ which uses filler text with exact input and output lengths. It's useful for swee
    matter more with longer contexts (the next sweep).
 4. **Keeping the slot helps agents but hurts short tasks.** Multi-step tasks
    finish faster, but short questions wait about 4× longer.
-5. **No setup made answers worse.**
-   - QA answers were identical in every run.
-   - Multi-step scores (9–12 out of 40) differ by about as much as running the
-     same setup twice, where 6 tasks flipped between right and wrong. llama.cpp
-     isn't perfectly repeatable when requests are batched together, even at
-     temperature 0.
-   - The low multi-step score is the model making arithmetic mistakes, not the
-     scheduler.
-   - Total output size was within 2% across setups, so no setup won by writing
-     less.
-6. **The same setup can vary by about 8% in total time** (257 vs 277 s), so sweeps
-   need repeated runs.
+5. **Automatic quality checks show a serious baseline limitation.**
+   - All 30 QA response texts were identical across these five runs (28 correct).
+   - Multi-step exact scores ranged from 9–12/40. Six individual tasks changed
+     correctness between the two repeats of the same request-FIFO setup.
+   - The first run had 124 output-limit stops in intermediate agent calls and 9
+     in final agent calls; 13 final answers were not valid JSON. Low accuracy
+     cannot be attributed solely to arithmetic or to scheduling.
+   - Only 1–4/10 writing responses met the required word range; writing
+     semantics were not judged. Generated output totals ranged from 29,105 to
+     30,133 tokens (3.4% relative to the largest), so compare actual output
+     lengths alongside speed.
+6. **One repeated setup changed total time by 7.6%** (257 vs 277 s). The other
+   cells need repeats before small speed differences can be trusted.
 
-**The main bottleneck:** what to do with an agent's KV cache while it waits for a
+**A measured trade-off:** what to do with an agent's KV cache while it waits for a
 tool.
 - Keeping it in GPU memory wastes the slot.
 - Throwing it away wastes compute on recomputing it.
@@ -200,12 +204,20 @@ keep-slot runs started with a warm cache. Treat them as rough.
 
 ## Sweeps
 
-Each sweep changes one thing and compares the two schedulers. The server is
-restarted before every run. Each config ran once; repeated runs differ by about 8%,
-so only trust differences bigger than that. Every run finished every task unless
-noted. Numbers come from [results/runs_summary.csv](results/runs_summary.csv).
+The server was restarted before every saved sweep run. Most settings ran once,
+so these plots show observed trends without uncertainty intervals. The slot
+sweep changes both scheduler concurrency and server KV allocation; the older
+synthetic context generator also changed other prompt text as document size
+changed. Read the [v1 sweep audit](docs/v1_sweep_audit.md) before treating a
+curve as a controlled effect. Every run finished every task except the 16k
+split-KV run noted below. Numbers come from
+[results/runs_summary.csv](results/runs_summary.csv).
 
-### More slots (80 real tasks, 4,096 KV tokens per slot)
+### More slots and server capacity (80 real tasks, 4,096 KV tokens per slot)
+
+Here `K=NP` and total `CTX=4096×NP`, so the number of slots and allocated KV
+memory grow together. The controlled v2 core matrix holds `NP` and `CTX` fixed
+while changing K.
 
 ![slots](results/plots/slots.png)
 
@@ -216,21 +228,27 @@ noted. Numbers come from [results/runs_summary.csv](results/runs_summary.csv).
 | 8 | 137 | 114 | 6.8 GB |
 | 16 | 196 | 139 | 8.6 GB |
 
-- **More slots = more speed, and we haven't hit the limit.** The GPU batches more
-  requests together. At 16 slots it uses only 8.6 of 24 GB, because these tasks
-  are short (under 4k tokens).
+- **More slots increased throughput in these four measured settings.** The GPU
+  batches more requests together. At 16 slots the run used about 8.6 GB of
+  GPU memory and had no memory failure for this v1 workload; longer contexts
+  could behave differently.
 - **Giving up the slot is 20–40% faster at every slot count.**
-- **Keeping the slot makes short questions wait 4–5× longer at every slot count.**
+- **Keeping the slot made short-question median completion time about 3.8–4.7×
+  longer** across these slot counts.
 - With more slots, a returning agent more often finds its old slot still free, so
   recompute drops from 91% (4 slots) to 56% (16 slots).
 
-### Longer agent context (synthetic: 20 agents + 20 short questions, 4 slots)
+### Longer agent context (synthetic: 15 agents + 25 short questions, 4 slots)
 
-Agents start from a document of 1k, 4k, or 12k tokens, then make 4 tool calls.
+Agents start from a document generated at a nominal size of 1k, 4k, or 12k
+tokens, then make 4 tool calls. Measured median initial agent prompts were
+about 0.98k, 3.50k, and 10.13k tokens. The same generator seed kept the task
+types fixed, but changing document size also changed most other task and tool
+text; this is not a paired size-only experiment.
 
 ![context](results/plots/context.png)
 
-| Agent document | Give up slot | Keep slot | Give up slot + RAM cache |
+| Nominal agent document | Give up slot | Keep slot | Give up slot + RAM cache |
 |---|---:|---:|---:|
 | 1k tokens | 84 s | 85 s | **59 s** |
 | 4k tokens | 149 s | 101 s | **80 s** |
@@ -238,13 +256,14 @@ Agents start from a document of 1k, 4k, or 12k tokens, then make 4 tool calls.
 
 (Time to finish all 40 tasks.)
 
-- **With long contexts the winner flips.** Giving up the slot means re-reading
-  almost 100% of the conversation after every tool call, which at 12k tokens is
-  2.4× slower than keeping the slot. With the short 80 real tasks it was the
-  other way around.
-- **The RAM cache gets the best of both**: near 0% recompute, and short questions
-  stay fast. But at 12k it used **8.9 GB of CPU RAM**, which fills its 8 GB limit
-  on a machine with 16 GB. More or longer agents would overflow it.
+- **The nominal 12k run shows a large reversal:** request FIFO took 352 s
+  versus 146 s for task FIFO, with nearly all carried-over context recomputed.
+  Because other prompt text changed, this is suggestive rather than an isolated
+  estimate of the effect of document length.
+- **The RAM-cache request run combined low recomputation with short-question
+  responsiveness** in this synthetic mix. At nominal 12k it reached **8.9 GB
+  server RSS** with an 8 GB cache budget; more cached contexts could cause
+  evictions or host-memory pressure.
 
 ### Longer tool waits (80 real tasks, 4 slots)
 
@@ -257,8 +276,8 @@ Agents start from a document of 1k, 4k, or 12k tokens, then make 4 tool calls.
 | 5 s | 273 s | 454 s | 81% |
 | 10 s | 276 s | **691 s** | 64% |
 
-- When agents give up their slot, tool waits are hidden: other requests use the
-  slot meanwhile.
+- When agents give up their slot, other requests use it during tool waits; the
+  measured makespan stayed near 271–276 s across these wait settings.
 - When agents keep their slot, it sits idle for the whole wait. At 10 s waits
   everything takes 2.5× longer and the GPU is idle about a third of the time.
 
@@ -266,25 +285,28 @@ Agents start from a document of 1k, 4k, or 12k tokens, then make 4 tool calls.
 
 ![arrival rate](results/plots/arrival_rate.png)
 
-- At light load (one task every 4 s), both schedulers behave about the same.
+- At the lowest offered rate, overall median task times were 17 s versus 21 s;
+  the short-question medians still differed (0.3 s versus 6.2 s).
 - As load grows, keeping the slot makes short questions wait 6–9× longer (72 s vs
   12 s at 1 task/s), while agent tasks finish faster (117 s vs 165 s).
 
 ### Memory options (80 real tasks, 8 slots, give up slot)
 
-| Setup | Finished | Time | GPU memory | Answers |
+| Setup | Finished | Time | GPU memory | Automatic quality check |
 |---|---:|---:|---:|---|
-| 32k tokens split 8 ways (normal) | 80/80 | 210 s | 6.8 GB | baseline |
+| 32k tokens split 8 ways (normal) | 80/80 | 210 s | 6.8 GB | 28/30 QA, 9/40 multistep |
 | 16k tokens split 8 ways (2k per slot) | **73/80** | 198 s | 5.9 GB | 7 long documents rejected |
-| 16k tokens as one shared pool (`--kv-unified`) | 80/80 | 221 s | 5.9 GB | same as baseline |
-| 32k tokens, 8-bit KV (`-ctk q8_0 -ctv q8_0`) | 80/80 | 224 s | 6.0 GB | same as baseline |
+| 16k tokens as one shared pool (`--kv-unified`) | 80/80 | 221 s | 5.9 GB | 28/30 QA, 9/40 multistep |
+| 32k tokens, 8-bit KV (`-ctk q8_0 -ctv q8_0`) | 80/80 | 224 s | 6.0 GB | 28/30 QA, 13/40 multistep |
 
-- **A shared KV pool matches the normal setup with half the KV memory**, because
-  a long document can use space the short tasks aren't using.
-- **8-bit KV saves about 0.9 GB** with the same answers, about 6% slower (within
-  noise).
-- The 16k-split run looks fastest only because it **skipped 7 tasks**. That's
-  why we always report finished tasks next to speed.
+- **A shared KV pool completed all tasks with a smaller total CTX allocation**
+  and about 0.9 GB less observed GPU memory. Its 221 s versus 210 s is a
+  single-run comparison.
+- **8-bit KV used about 0.9 GB less GPU memory** than the standard 32k run.
+  QA scores matched, while multistep scores differed; the single runs do not
+  establish whether compression changed answer quality.
+- The 16k-split run rejected **7 long-context tasks with HTTP 400**, so its
+  198 s makespan is not comparable to an 80/80 completion run.
 
 ### Bringing KV back after a tool call (microbenchmark, 1 slot)
 
@@ -299,24 +321,29 @@ Agents start from a document of 1k, 4k, or 12k tokens, then make 4 tool calls.
 
 - The KV cache is about **57 KB per token** (1.7 GB for 30k tokens).
 - **RAM is about 12× faster than recompute.**
-- **llama.cpp's SSD restore is no faster than recomputing**, even on the local
-  NVMe disk. Both disks read at about 130 MB/s, so the slow part is llama.cpp's
-  loading code, not the disk. A faster SSD path should take well under 1 s.
+- **SSD restore took about 13 s**, close to recomputation at roughly 13–15 s,
+  on both EBS and local NVMe. The effective rate was about 132 MB/s for a 1.72
+  GB slot file. This test does not isolate disk I/O from llama.cpp loading and
+  memory-copy costs.
 
-## What Phase 1 shows
+## Provisional Phase 1 lessons from v1
 
-**The main bottleneck is what to do with an agent's KV cache while it waits for a
-tool**, and no fixed rule wins everywhere:
+The completed v1 sweeps show a trade-off between reusing an agent's context and
+freeing its slot during a tool wait. The table describes the observed direction
+of the single-run comparisons, not a tuned policy choice for every workload.
+The 12k synthetic inputs were not paired across document sizes, and the new v2
+matrix will test these patterns with stronger controls.
 
-| Situation | Best fixed choice | Why |
+| Situation | Favorable choice in these runs | Observed reason |
 |---|---|---|
 | Short context | give up the slot | recompute is cheap; the slot keeps working |
-| Long context, short wait | keep the slot | recompute is expensive (2.4× slower at 12k) |
-| Long wait | give up the slot | a kept slot sits idle (2.5× slower at 10 s) |
-| Long context **and** long wait | offload to CPU RAM | RAM restore is 12× cheaper than recompute, but RAM fills up fast |
+| Nominal 12k context, 2 s wait | keep the slot | request FIFO made 40 tasks take 352 s versus 146 s for task FIFO in the synthetic run |
+| 10 s tool wait with v1 tasks | give up the slot | task FIFO took 691 s versus 276 s for request FIFO |
+| Long context with RAM cache | give up the slot with RAM cache | the nominal 12k RAM-cache run took 144 s; 30k-token RAM restore was faster than recompute in the microbenchmark |
 
-A fixed slot count has the same problem. Too few slots waste the GPU, and too
-many will run out of KV memory once contexts get long.
+Raising slots and total KV allocation together improved throughput in the
+measured 2–16 slot range. The v1 runs do not establish the point at which
+additional slots stop helping or exhaust memory.
 
 **Phase 2 plan:** at each tool call, decide whether to **keep** the KV in GPU,
 **move** it to CPU RAM or SSD, or **drop** it and recompute later, based on
@@ -326,6 +353,8 @@ priority so long tasks aren't starved. Compare against both FIFO schedulers and
 the best tuned fixed setup (more slots, shared KV pool, 8-bit KV).
 
 ## How to run (on the GPU machine)
+
+To reproduce the **older v1 experiments** summarized above:
 
 ```bash
 bash setup/setup_node.sh                 # one-time: build llama.cpp, download model
@@ -349,7 +378,7 @@ python -m analysis.summarize      # results/runs_summary.csv
 python -m analysis.plots          # results/plots/*.png
 ```
 
-For the controlled v2 comparison, generate the fixed 60-task subset with
+For the **controlled v2 comparison**, generate the fixed 60-task subset with
 `python -m scripts.select_validation`, inspect the matrix with
 `python -m scripts.phase1_fifo --workload workloads/generated/validation_v2_60.jsonl --prefix phase1_v2_batch --dry-run`,
 then execute without `--dry-run`. See the [full protocol](docs/phase1_protocol.md)

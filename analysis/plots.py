@@ -121,17 +121,17 @@ def main():
     df = pd.read_csv("results/runs_summary.csv")
 
     figure([("tok_per_s", "Throughput", "generated tokens / s"),
-            ("short_qa_p50_s", "Short QA wait", "median task time (s)"),
+            ("short_qa_p50_s", "Short QA completion", "median task time (s)"),
             ("multistep_p50_s", "Agent tasks", "median task time (s)"),
             ("peak_gpu_mb", "GPU memory", "peak MB")],
            sweep(df, "slots", r"_k(\d+)_"), "slots",
            "More slots: 80 real tasks, 4,096 KV tokens per slot", "slots (K)", logx=True)
 
     figure([("makespan_s", "Time to finish all 40 tasks", "seconds"),
-            ("prefill_s", "GPU time spent reading prompts", "seconds (summed over requests)"),
+            ("prefill_s", "Prompt evaluation time", "seconds (summed over requests)"),
             ("peak_rss_mb", "Server CPU RAM", "peak MB")],
            sweep(df, "ctx", r"_ctx_(\d+)_"), "context",
-           "Longer agent context: 20 agents + 20 short questions, 4 slots", "agent document (tokens)", logx=True)
+           "Longer agent context: 15 agents + 25 short questions, 4 slots", "nominal agent document (tokens)", logx=True)
 
     delay = sweep(df, "delay", r"_delay_([\d.]+)_")
     base = df[df.run.isin(["sw_slots_k4_gpuonly_fifo_request", "sw_slots_k4_gpuonly_fifo_task"])].copy()
@@ -139,7 +139,7 @@ def main():
     delay = pd.concat([delay, base]).sort_values("x")
     figure([("makespan_s", "Time to finish all 80 tasks", "seconds"),
             ("gpu_util_mean", "GPU busy", "mean utilisation (%)"),
-            ("short_qa_p50_s", "Short QA wait", "median task time (s)")],
+            ("short_qa_p50_s", "Short QA completion", "median task time (s)")],
            delay, "tool_delay", "Longer tool waits: 80 real tasks, 4 slots", "tool delay (s)")
 
     figure([("short_qa_p50_s", "Short QA", "median task time (s)"),
