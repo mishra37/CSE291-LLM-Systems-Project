@@ -65,11 +65,21 @@ the low exact-answer scores and output lengths need attention before claiming
 a quality-neutral speedup. See the [raw runs](results/raw/) and
 [core CSVs and curves](results/phase1_v2_batch/).
 
-Because the team account has a **$20 daily AWS limit**, the outer launch shell
-remains suspended. The additional 56 arrival, delay, context, output-length,
-and cache runs have **not** started. The core process has finished, but the EC2
-instance and llama-server were still running at this snapshot and continue to
-bill until the instance is stopped.
+### Additional sweeps in progress
+
+At **2026-11-04 21:56 UTC**, the previously suspended launcher resumed on the
+same AWS checkout. It is running 56 additional runs sequentially: tool delay
+(12), arrival rate (12), context length (12), output length (12), and RAM cache
+(8). As of **22:02 UTC**, the first tool-delay run had completed 60/60 tasks
+without failures and the next run had started. After each group, the launcher
+generates CSV summaries and PNG curves under `results/phase1_delay`,
+`results/phase1_rate`, `results/phase1_context`, `results/phase1_output`, and
+`results/phase1_cache` on the instance. These results remain preliminary until
+all paired runs and report controls are checked and copied to this repository.
+
+The team account has a **$20 daily AWS limit**. The EC2 instance continues
+billing while this sequence runs. The launcher stops on an error; a budget halt
+may leave a partial group that needs inspection before resuming.
 
 The raw data and generated report are now in this repository. The instance log
 remains at `/home/ec2-user/phase1-launch.log`. To regenerate the report, run
