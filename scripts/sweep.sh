@@ -7,6 +7,7 @@
 #   bash scripts/sweep.sh ctx     # synthetic agents starting from 1k/4k/12k-token documents  (~45 min)
 #   bash scripts/sweep.sh kv      # KV memory options at K=8: split vs unified pool, q8_0 KV  (~25 min)
 #   bash scripts/sweep.sh rate    # Poisson arrivals 0.25/0.5/1 tasks/s, v1, K=4              (~40 min)
+#   bash scripts/sweep.sh extra   # 4-bit KV on v1 at K=8; 2 GB RAM cache on 4k/12k agents    (~15 min)
 #   bash scripts/sweep.sh micro   # KV restore cost: recompute vs GPU vs SSD (EBS, NVMe) vs RAM (~8 min)
 #   REPS=2 bash scripts/sweep.sh slots   # also run a second repeat (_r2) of every config
 # Run names: sw_<group>_<value>_<gpuonly|ramcache|...>_<scheduler>[_r<n>]
@@ -14,7 +15,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PY="${PY:-$HOME/llmsys/venv/bin/python}"
 REPS="${REPS:-1}"
-GROUP="${1:?usage: bash scripts/sweep.sh slots|delay|ctx|kv|rate|micro}"
+GROUP="${1:?usage: bash scripts/sweep.sh slots|delay|ctx|kv|rate|extra|micro}"
 
 run() {  # run <name> <workload> <sched> <K> <CTX> <score 0|1> [server args...]
   local name=$1 workload=$2 sched=$3 k=$4 ctx=$5 score=$6; shift 6
@@ -72,6 +73,15 @@ rate)  # slower arrivals = less contention, so fewer evictions and idle slots ma
     for S in fifo_request fifo_task; do
       run "sw_rate_${R}_gpuonly_$S" "v1_poisson$R" $S 4 16384 1 $GPU
     done
+  done ;;
+extra)  # 4-bit KV (does more compression cost accuracy?) and a RAM cache too small for 12k agents
+  $PY -m workloads.export_v1 --name v1_batch --arrival batch
+  run sw_kv_q4k8_gpuonly_fifo_request v1_batch fifo_request 8 32768 1 $GPU -ctk q4_0 -ctv q4_0
+  for C in 4000 12000; do
+    $PY workloads/generate.py --name "agentdoc$C" --seed 0 --n-tasks 40 --arrival batch \
+        --mix multistep=0.5,short_qa=0.5 --doc-tokens $C --steps 5 --tool-delay 2 \
+        --tool-tokens 200 --out-tokens 64 --prefix short_shared
+    run "sw_ctx_${C}_ram2g_fifo_request" "agentdoc$C" fifo_request 4 65536 0 --cache-ram 2048
   done ;;
 micro)  # one slot, 32k tokens: recompute vs keep in GPU vs SSD save/restore vs host-RAM cache
   # SSD twice: EBS (network disk, the default root volume) and the instance's local NVMe

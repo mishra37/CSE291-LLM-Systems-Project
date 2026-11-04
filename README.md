@@ -6,7 +6,7 @@ CSE 291 (LLM Systems) project.
 pause to call tools, how should we decide who runs next and what to keep in GPU
 memory, so that more tasks finish without running out of memory?
 
-- **Phase 1 :** measure two simple first-come-first-served (FIFO) schedulers
+- **Phase 1:** measure two simple first-come-first-served (FIFO) schedulers
   and find what slows them down.
 - **Phase 2:** build one smarter, memory-aware scheduler based on what Phase 1 shows.
 
@@ -16,12 +16,15 @@ memory, so that more tasks finish without running out of memory?
   - two FIFO schedulers and a runner that replays a workload and records timing,
     memory, and outputs
   - an 80-task real workload with correct answers, plus scoring
-  - first full runs of that workload on AWS (results below)
+  - full runs of that workload on AWS, plus sweeps over slot count, context
+    length, tool delay, and arrival rate
+  - memory experiments: CPU RAM cache, SSD save/restore, 8-bit KV, shared KV pool
+  - plots ([results/plots/](results/plots/)) and a one-row-per-run summary
+    ([results/runs_summary.csv](results/runs_summary.csv))
 - **Not done yet:**
-  - sweeps (slot count, context length, tool delay, arrival rate)
-  - KV save/restore and KV quantization tests
-  - plots
-  - the Phase 2 scheduler
+  - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
+  - repeat runs of the sweeps (each sweep config ran once)
+  - the Phase 1 report and the Phase 2 scheduler
 
 Setup: AWS g6.xlarge (one NVIDIA L4, 24 GB), llama.cpp `llama-server` built with
 CUDA, model Qwen2.5-7B-Instruct (4-bit, Q4_K_M). Setup steps are in
@@ -107,7 +110,7 @@ which uses filler text with exact input and output lengths. It's useful for swee
 | Finished | 80/80 | 80/80 | 80/80 | 80/80 | 80/80 |
 | Total time | 257 s | 277 s | 340 s | 251 s | 337 s |
 | Tokens generated per second | 117 | 106 | 87 | 118 | 86 |
-| Agent context recomputed after a tool call | 92% | 92% | 12% | 23% | 12% |
+| Agent context recomputed after a tool call | 91% | 91% | 0% | 13% | 0% |
 | Short QA, median time | 25 s | 27 s | 112 s | 28 s | 111 s |
 | Multi-step, median time | 196 s | 216 s | 164 s | 207 s | 161 s |
 | GPU memory | 5.9 GB | 5.9 GB | 5.9 GB | 5.9 GB | 5.9 GB |
@@ -123,9 +126,9 @@ which uses filler text with exact input and output lengths. It's useful for swee
    wait, the GPU works on fewer requests at once and produces fewer tokens per
    second.
 2. **But giving up the slot throws away agent context.** With 80 tasks waiting,
-   the slot is always taken by the time the tool returns, so 92% of the agent's
-   context has to be recomputed.
-3. **llama.cpp's RAM cache fixes most of that.** Recompute drops from 92% to 23%,
+   the slot is always taken by the time the tool returns, so 91% of the agent's
+   earlier conversation has to be recomputed.
+3. **llama.cpp's RAM cache fixes most of that.** Recompute drops from 91% to 13%,
    at a cost of about 4.5 GB of extra CPU RAM. Total speed barely changes, because
    these contexts are short (1–3k tokens), so recompute is still cheap. It should
    matter more with longer contexts (the next sweep).
@@ -163,26 +166,132 @@ agents give up their slot, and agents are faster when they keep it. These runs
 were done before we started restarting the server between runs, so the
 keep-slot runs started with a warm cache. Treat them as rough.
 
-## Why 4 slots? What's next
+## Sweeps
 
-4 slots was just a starting point. You can run 5 or more with `-np 5`, but the
-total KV memory is shared: 16k / 5 is about 3.3k tokens per slot, so long tasks
-won't fit. For a fair comparison we raise total context along with the slot
-count. 64k tokens of KV cache is only about 3.6 GB, and the L4 has room.
+Each sweep changes one thing and compares the two schedulers. The server is
+restarted before every run. Each config ran once; repeated runs differ by about 8%,
+so only trust differences bigger than that. Every run finished every task unless
+noted. Numbers come from [results/runs_summary.csv](results/runs_summary.csv).
 
-Next experiments:
-1. **Slot count:** 1, 2, 4, 8, 16 slots, with the same context per slot. Where
-   does throughput stop improving, and when does memory run out?
-2. **Context length:** at what size does recompute become expensive?
-3. **Tool delay:** 0.5 s to 10 s. Longer waits mean more idle slots under
-   "keep slot".
-4. **Arrival rate and prefix sharing.**
-5. **Memory options:**
-   - saving KV to SSD and restoring it, vs recomputing (`--slot-save-path`)
-   - smaller KV cache (`-ctk q8_0`)
-   - one shared KV pool (`--kv-unified`)
-6. Repeat each run 2–3 times, plot the results, and write the Phase 1 report with
-   the Phase 2 design.
+### More slots (80 real tasks, 4,096 KV tokens per slot)
+
+![slots](results/plots/slots.png)
+
+| Slots | Tokens/s, give up slot | Tokens/s, keep slot | GPU memory |
+|---|---:|---:|---:|
+| 2 | 81 | 59 | 5.5 GB |
+| 4 | 108 | 91 | 5.9 GB |
+| 8 | 137 | 114 | 6.8 GB |
+| 16 | 196 | 139 | 8.6 GB |
+
+- **More slots = more speed, and we haven't hit the limit.** The GPU batches more
+  requests together. At 16 slots it uses only 8.6 of 24 GB, because these tasks
+  are short (under 4k tokens).
+- **Giving up the slot is 20–40% faster at every slot count.**
+- **Keeping the slot makes short questions wait 4–5× longer at every slot count.**
+- With more slots, a returning agent more often finds its old slot still free, so
+  recompute drops from 91% (4 slots) to 56% (16 slots).
+
+### Longer agent context (synthetic: 20 agents + 20 short questions, 4 slots)
+
+Agents start from a document of 1k, 4k, or 12k tokens, then make 4 tool calls.
+
+![context](results/plots/context.png)
+
+| Agent document | Give up slot | Keep slot | Give up slot + RAM cache |
+|---|---:|---:|---:|
+| 1k tokens | 84 s | 85 s | **59 s** |
+| 4k tokens | 149 s | 101 s | **80 s** |
+| 12k tokens | **352 s** | 146 s | 144 s |
+
+(Time to finish all 40 tasks.)
+
+- **With long contexts the winner flips.** Giving up the slot means re-reading
+  almost 100% of the conversation after every tool call, which at 12k tokens is
+  2.4× slower than keeping the slot. With the short 80 real tasks it was the
+  other way around.
+- **The RAM cache gets the best of both**: near 0% recompute, and short questions
+  stay fast. But at 12k it used **8.9 GB of CPU RAM**, which fills its 8 GB limit
+  on a machine with 16 GB. More or longer agents would overflow it.
+
+### Longer tool waits (80 real tasks, 4 slots)
+
+![tool delay](results/plots/tool_delay.png)
+
+| Tool wait | Give up slot | Keep slot | GPU busy (keep slot) |
+|---|---:|---:|---:|
+| 0.5 s | 271 s | 270 s | 96% |
+| 2 s | 271 s | 326 s | 93% |
+| 5 s | 273 s | 454 s | 81% |
+| 10 s | 276 s | **691 s** | 64% |
+
+- When agents give up their slot, tool waits are hidden: other requests use the
+  slot meanwhile.
+- When agents keep their slot, it sits idle for the whole wait. At 10 s waits
+  everything takes 2.5× longer and the GPU is idle about a third of the time.
+
+### Busier arrivals (80 real tasks arriving randomly, 4 slots)
+
+![arrival rate](results/plots/arrival_rate.png)
+
+- At light load (one task every 4 s), both schedulers behave about the same.
+- As load grows, keeping the slot makes short questions wait 6–9× longer (72 s vs
+  12 s at 1 task/s), while agent tasks finish faster (117 s vs 165 s).
+
+### Memory options (80 real tasks, 8 slots, give up slot)
+
+| Setup | Finished | Time | GPU memory | Answers |
+|---|---:|---:|---:|---|
+| 32k tokens split 8 ways (normal) | 80/80 | 210 s | 6.8 GB | baseline |
+| 16k tokens split 8 ways (2k per slot) | **73/80** | 198 s | 5.9 GB | 7 long documents rejected |
+| 16k tokens as one shared pool (`--kv-unified`) | 80/80 | 221 s | 5.9 GB | same as baseline |
+| 32k tokens, 8-bit KV (`-ctk q8_0 -ctv q8_0`) | 80/80 | 224 s | 6.0 GB | same as baseline |
+
+- **A shared KV pool matches the normal setup with half the KV memory**, because
+  a long document can use space the short tasks aren't using.
+- **8-bit KV saves about 0.9 GB** with the same answers, about 6% slower (within
+  noise).
+- The 16k-split run looks fastest only because it **skipped 7 tasks**. That's
+  why we always report finished tasks next to speed.
+
+### Bringing KV back after a tool call (microbenchmark, 1 slot)
+
+![KV restore](results/plots/micro_kv_restore.png)
+
+| Way to resume a 30k-token conversation | Time |
+|---|---:|
+| KV still in GPU | 0.04 s |
+| Restore from CPU RAM (llama.cpp cache) | 1.2 s |
+| Restore from SSD (llama.cpp slot file, EBS or local NVMe) | 13 s |
+| Recompute from scratch | 14.8 s |
+
+- The KV cache is about **57 KB per token** (1.7 GB for 30k tokens).
+- **RAM is about 12× faster than recompute.**
+- **llama.cpp's SSD restore is no faster than recomputing**, even on the local
+  NVMe disk. Both disks read at about 130 MB/s, so the slow part is llama.cpp's
+  loading code, not the disk. A faster SSD path should take well under 1 s.
+
+## What Phase 1 shows
+
+**The main bottleneck is what to do with an agent's KV cache while it waits for a
+tool**, and no fixed rule wins everywhere:
+
+| Situation | Best fixed choice | Why |
+|---|---|---|
+| Short context | give up the slot | recompute is cheap; the slot keeps working |
+| Long context, short wait | keep the slot | recompute is expensive (2.4× slower at 12k) |
+| Long wait | give up the slot | a kept slot sits idle (2.5× slower at 10 s) |
+| Long context **and** long wait | offload to CPU RAM | RAM restore is 12× cheaper than recompute, but RAM fills up fast |
+
+A fixed slot count has the same problem. Too few slots waste the GPU, and too
+many will run out of KV memory once contexts get long.
+
+**Phase 2 plan:** at each tool call, decide whether to **keep** the KV in GPU,
+**move** it to CPU RAM or SSD, or **drop** it and recompute later, based on
+context size, expected tool wait, and free memory. Admit new tasks based on how
+much KV memory is free rather than a fixed slot count, and give returning agents
+priority so long tasks aren't starved. Compare against both FIFO schedulers and
+the best tuned fixed setup (more slots, shared KV pool, 8-bit KV).
 
 ## How to run (on the GPU machine)
 
@@ -191,6 +300,21 @@ bash setup/setup_node.sh                 # one-time: build llama.cpp, download m
 SMOKE=1 bash scripts/quality.sh          # 20-task quick check, ~2 min
 K=4 CTX=16384 bash scripts/quality.sh    # full 80-task runs (4 setups + 1 repeat), ~30 min
 bash scripts/pilot.sh                    # 30-task synthetic pilot
+bash scripts/sweep.sh slots              # one sweep group: slots|ctx|delay|kv|rate|extra|micro
+```
+
+Run all sweeps in the background (they survive a dropped SSH session; finished
+runs are skipped if you start again):
+
+```bash
+nohup bash -c 'for g in slots ctx delay kv rate extra micro; do bash scripts/sweep.sh $g; done' > sweep.log 2>&1 &
+```
+
+Summarize and plot (works on a laptop once results are pulled):
+
+```bash
+python -m analysis.summarize      # results/runs_summary.csv
+python -m analysis.plots          # results/plots/*.png
 ```
 
 The scripts restart the server before each run, so no run gets another run's
@@ -228,6 +352,7 @@ Each run writes a folder in [results/raw/](results/raw/):
 | [scheduler/fifo.py](scheduler/fifo.py) | the two FIFO schedulers |
 | [runner/](runner/) | sends tasks to llama.cpp and records everything |
 | [evaluation/](evaluation/) | scoring for QA, multi-step, and long generation |
-| [scripts/](scripts/) | `quality.sh` (80-task runs), `pilot.sh` (synthetic pilot) |
+| [scripts/](scripts/) | `quality.sh` (80-task runs), `sweep.sh` (all sweeps), `kv_microbench.py` (KV restore timing), `pilot.sh` (synthetic pilot) |
+| [analysis/](analysis/) | `summarize.py` (one row per run), `plots.py` (figures) |
 | [tests/](tests/) | unit tests for task data and scorers |
-| [results/](results/) | environment info and raw run data |
+| [results/](results/) | raw run data, `runs_summary.csv`, `plots/` |
