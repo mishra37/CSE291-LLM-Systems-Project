@@ -1,0 +1,539 @@
+task_id,type,status,completed,correct,token_f1,text,subtype,field_fraction,error,words,word_range_ok
+short_qa-v1-001,short_qa,ok,True,1,1.0,Denver Broncos,,,,,
+short_qa-v1-002,short_qa,ok,True,1,1.0,8,,,,,
+short_qa-v1-003,short_qa,ok,True,1,1.0,France,,,,,
+short_qa-v1-004,short_qa,ok,True,1,1.0,1884,,,,,
+short_qa-v1-005,short_qa,ok,True,1,1.0,Computational complexity theory,,,,,
+short_qa-v1-006,short_qa,ok,True,1,1.0,Thomas Newcomen,,,,,
+short_qa-v1-007,short_qa,ok,True,1,1.0,Skylab,,,,,
+short_qa-v1-008,short_qa,ok,True,1,1.0,Brazil,,,,,
+short_qa-v1-009,short_qa,ok,True,1,1.0,seven months old,,,,,
+short_qa-v1-010,short_qa,ok,True,1,1.0,Alfred Wegener,,,,,
+short_qa-v1-011,short_qa,ok,True,1,1.0,1852,,,,,
+short_qa-v1-012,short_qa,ok,True,1,1.0,Ögedei Khan,,,,,
+short_qa-v1-013,short_qa,ok,True,1,1.0,pathogens,,,,,
+short_qa-v1-014,short_qa,ok,True,1,1.0,1639,,,,,
+short_qa-v1-015,short_qa,ok,True,1,1.0,TARDIS,,,,,
+short_qa-v1-016,short_qa,ok,True,1,1.0,four,,,,,
+short_qa-v1-017,short_qa,ok,True,0,0.5714285714285714,by pinching in two,,,,,
+short_qa-v1-018,short_qa,ok,True,1,1.0,itself,,,,,
+short_qa-v1-019,short_qa,ok,True,1,1.0,Rhin,,,,,
+short_qa-v1-020,short_qa,ok,True,1,1.0,megaprojects,,,,,
+long_context-v1-001,long_context,ok,True,1,,390052,,,,,
+long_context-v1-002,long_context,ok,True,1,,WH-976598,,,,,
+long_context-v1-003,long_context,ok,True,1,,RM-519683,,,,,
+long_context-v1-004,long_context,ok,True,1,,service-710985,,,,,
+long_context-v1-005,long_context,ok,True,0,,151355,,,,,
+long_context-v1-006,long_context,ok,True,1,,WH-384433,,,,,
+long_context-v1-007,long_context,ok,True,1,,RM-535117,,,,,
+long_context-v1-008,long_context,ok,True,1,,service-981472,,,,,
+long_context-v1-009,long_context,ok,True,1,,513278,,,,,
+long_context-v1-010,long_context,ok,True,1,,WH-281003,,,,,
+multistep-sales-v1-001,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": 460,
+  ""largest_region"": ""South"",
+  ""largest_region_net_sales_usd"": 180
+}",sales_analysis,0.6667,wrong_or_missing_fields,,
+multistep-sales-v1-002,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": 350,
+  ""largest_region"": ""North"",
+  ""largest_region_net_sales_usd"": 200
+}",sales_analysis,0.6667,wrong_or_missing_fields,,
+multistep-sales-v1-003,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": -20000,
+  ""largest_region"": ""North"",
+  ""largest_region_net_sales_usd"": -50000
+}",sales_analysis,0.0,wrong_or_missing_fields,,
+multistep-sales-v1-004,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": 710,
+  ""regions_below_target"": [""South""],
+  ""total_shortfall_usd"": 50
+}",sales_analysis,0.0,wrong_or_missing_fields,,
+multistep-sales-v1-005,multistep,ok,True,0,,"{
+  ""total_net_change_usd"": 125,
+  ""largest_increase_region"": ""East"",
+  ""largest_net_increase_usd"": 130
+}",sales_analysis,0.0,wrong_or_missing_fields,,
+multistep-sales-v1-006,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": 2625,
+  ""regions_below_target"": [""West"", ""East""],
+  ""total_shortfall_usd"": 150
+}",sales_analysis,0.0,wrong_or_missing_fields,,
+multistep-sales-v1-007,multistep,ok,True,0,,"{
+  ""total_net_change_usd"": -105,
+  ""largest_increase_region"": ""South"",
+  ""largest_net_increase_usd"": 10
+}",sales_analysis,0.0,wrong_or_missing_fields,,
+multistep-sales-v1-008,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": 3350,
+  ""largest_region"": ""Valley"",
+  ""largest_region_net_sales_usd"": 1500
+}",sales_analysis,0.6667,wrong_or_missing_fields,,
+multistep-sales-v1-009,multistep,ok,True,0,,"{
+  ""total_net_sales_usd"": 1255,
+  ""regions_below_target"": [""Central"", ""East""],
+  ""total_shortfall_usd"": 155
+}",sales_analysis,0.0,wrong_or_missing_fields,,
+multistep-sales-v1-010,multistep,ok,True,0,,"{
+  ""total_net_change_usd"": -150,
+  ""largest_increase_region"": ""North"",
+  ""largest_net_increase_usd"": -150
+}",sales_analysis,0.3333,wrong_or_missing_fields,,
+multistep-logs-v1-001,multistep,ok,True,0,,"```json
+{
+  ""origin_component"": ""database"",
+  ""origin_error_code"": ""POOL_EXHAUSTED"",
+  ""event_chain"": [
+    {""event_id"": ""E-201"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E-202""},
+    {""event_id"": ""E-202"", ""component"": ""checkout"", ""error_code"": ""DB_REQUEST_FAILED"", ""cause_event_id"": ""D-301""},
+    {""event_id"": ""D-301"", ""component"": ""database"", """,log_investigation,0.0,not_json,,
+multistep-logs-v1-002,multistep,ok,True,0,,"{
+  ""origin_component"": ""cache"",
+  ""origin_error_code"": ""CONNECTION_REFUSED"",
+  ""event_chain"": [
+    {""event_id"": ""E0200"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0201""},
+    {""event_id"": ""E0201"", ""component"": ""cache"", ""error_code"": ""CONNECTION_REFUSED"", ""cause_event_id"": null}
+  ]
+}",log_investigation,0.6667,wrong_or_missing_fields,,
+multistep-logs-v1-003,multistep,ok,True,1,,"{
+  ""origin_component"": ""payment"",
+  ""origin_error_code"": ""UPSTREAM_TIMEOUT"",
+  ""event_chain"": [""E0300"", ""E0301""]
+}",log_investigation,1.0,,,
+multistep-logs-v1-004,multistep,ok,True,0,,"{
+  ""origin_component"": ""auth"",
+  ""origin_error_code"": ""SIGNING_KEY_UNAVAILABLE"",
+  ""event_chain"": [
+    {""event_id"": ""E0400"", ""request_id"": ""req-804"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0401""},
+    {""event_id"": ""E0401"", ""request_id"": ""req-804"", ""component"": ""checkout"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0402""},
+",log_investigation,0.0,not_json,,
+multistep-logs-v1-005,multistep,ok,True,0,,"{
+  ""origin_component"": ""inventory"",
+  ""origin_error_code"": ""STOCK_LOCK_TIMEOUT"",
+  ""event_chain"": [
+    {""event_id"": ""E0500"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0501""},
+    {""event_id"": ""E0501"", ""component"": ""checkout"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0502""},
+    {""event_id"": ""E0502"", ""component"": ""router"", ""error_code"": """,log_investigation,0.0,not_json,,
+multistep-logs-v1-006,multistep,ok,True,1,,"{
+  ""origin_component"": ""database"",
+  ""origin_error_code"": ""DEADLOCK_DETECTED"",
+  ""event_chain"": [
+    ""E0600"",
+    ""E0601"",
+    ""E0602"",
+    ""E0603""
+  ]
+}",log_investigation,1.0,,,
+multistep-logs-v1-007,multistep,ok,True,0,,"```json
+{
+  ""origin_component"": ""storage"",
+  ""origin_error_code"": ""QUOTA_EXCEEDED"",
+  ""event_chain"": [
+    {""event_id"": ""E0700"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0701""},
+    {""event_id"": ""E0701"", ""component"": ""checkout"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0702""},
+    {""event_id"": ""E0702"", ""component"": ""router"", ""error",log_investigation,0.0,not_json,,
+multistep-logs-v1-008,multistep,ok,True,0,,"{
+  ""origin_component"": ""search"",
+  ""origin_error_code"": ""INDEX_UNAVAILABLE"",
+  ""event_chain"": [
+    {""event_id"": ""E0800"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0801""},
+    {""event_id"": ""E0801"", ""component"": ""checkout"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0802""},
+    {""event_id"": ""E0802"", ""component"": ""router"", ""error_code"": ""UP",log_investigation,0.0,not_json,,
+multistep-logs-v1-009,multistep,ok,True,0,,"{
+  ""origin_component"": ""catalog"",
+  ""origin_error_code"": ""CONFIG_MISSING"",
+  ""event_chain"": [
+    {""event_id"": ""E0900"", ""request_id"": ""req-809"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0901""},
+    {""event_id"": ""E0901"", ""request_id"": ""req-809"", ""component"": ""checkout"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E0902""},
+    {""event",log_investigation,0.0,not_json,,
+multistep-logs-v1-010,multistep,ok,True,0,,"{
+  ""origin_component"": ""pricing"",
+  ""origin_error_code"": ""RATE_TABLE_UNAVAILABLE"",
+  ""event_chain"": [
+    {""event_id"": ""E1000"", ""component"": ""gateway"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E1001""},
+    {""event_id"": ""E1001"", ""component"": ""checkout"", ""error_code"": ""UPSTREAM_FAILURE"", ""cause_event_id"": ""E1002""},
+    {""event_id"": ""E1002"", ""component"": ""router"", ""error_code"": """,log_investigation,0.0,not_json,,
+multistep-documents-v1-001,multistep,ok,True,0,,"```json
+{
+  ""owner_team"": ""Records-01"",
+  ""retention_days"": 45,
+  ""section_chain"": [""S011"", ""S012""]
+}
+```",document_lookup,0.0,not_json,,
+multistep-documents-v1-002,multistep,ok,True,1,,"{
+  ""revision"": 1,
+  ""retention_days"": 120,
+  ""owner_team"": ""Team-Blue""
+}",document_lookup,1.0,,,
+multistep-documents-v1-003,multistep,ok,True,0,,"```json
+{
+  ""required_approvals"": [""legal"", ""operations"", ""security""],
+  ""approval_count"": 3,
+  ""sites_requiring_security_review"": [""Site-03-1""]
+}
+```",document_lookup,0.0,not_json,,
+multistep-documents-v1-004,multistep,ok,True,1,,"{
+  ""owner_team"": ""Records-04"",
+  ""retention_days"": 90,
+  ""section_chain"": [""S041"", ""S042"", ""S043"", ""S044""]
+}",document_lookup,1.0,,,
+multistep-documents-v1-005,multistep,ok,True,1,,"{
+  ""revision"": 3,
+  ""retention_days"": 30,
+  ""owner_team"": ""Team-Amber""
+}",document_lookup,1.0,,,
+multistep-documents-v1-006,multistep,ok,True,1,,"{
+  ""required_approvals"": [""finance"", ""legal"", ""operations""],
+  ""approval_count"": 3,
+  ""sites_requiring_security_review"": []
+}",document_lookup,1.0,,,
+multistep-documents-v1-007,multistep,ok,True,0,,"```json
+{""revision"": 3, ""retention_days"": 14, ""owner_team"": ""Team-Blue""}
+```",document_lookup,0.0,not_json,,
+multistep-documents-v1-008,multistep,ok,True,1,,"{
+  ""owner_team"": ""Records-08"",
+  ""retention_days"": 150,
+  ""section_chain"": [""S081"", ""S082"", ""S083"", ""S084"", ""S085"", ""S086"", ""S087""]
+}",document_lookup,1.0,,,
+multistep-documents-v1-009,multistep,ok,True,0,,"{
+  ""revision"": 3,
+  ""retention_days"": 60,
+  ""owner_team"": ""Team-Delta""
+}",document_lookup,0.3333,wrong_or_missing_fields,,
+multistep-documents-v1-010,multistep,ok,True,1,,"{
+  ""required_approvals"": [""finance"", ""legal"", ""operations"", ""security""],
+  ""approval_count"": 4,
+  ""sites_requiring_security_review"": [""Site-10-2"", ""Site-10-3"", ""Site-10-4"", ""Site-10-5""]
+}",document_lookup,1.0,,,
+multistep-inventory-v1-001,multistep,ok,True,1,,"{
+  ""shortage_skus"": [""SKU01-1""],
+  ""total_shortage_units"": 5,
+  ""largest_shortage_sku"": ""SKU01-1""
+}",inventory_check,1.0,,,
+multistep-inventory-v1-002,multistep,ok,True,0,,"{
+  ""available_units"": 30,
+  ""shortfall_units"": 10,
+  ""warehouses_with_stock"": [""WH02-1"", ""WH02-2""]
+}",inventory_check,0.3333,wrong_or_missing_fields,,
+multistep-inventory-v1-003,multistep,ok,True,0,,"{
+  ""shortage_skus"": [""SKU03-1"", ""SKU03-2""],
+  ""total_shortage_units"": 30,
+  ""largest_shortage_sku"": ""SKU03-1""
+}",inventory_check,0.0,wrong_or_missing_fields,,
+multistep-inventory-v1-004,multistep,ok,True,0,,"{
+  ""shortage_skus"": [""SKU04-4""],
+  ""total_shortage_units"": 9,
+  ""largest_shortage_sku"": ""SKU04-4""
+}",inventory_check,0.0,wrong_or_missing_fields,,
+multistep-inventory-v1-005,multistep,ok,True,1,,"{
+  ""available_units"": 0,
+  ""shortfall_units"": 50,
+  ""warehouses_with_stock"": []
+}",inventory_check,1.0,,,
+multistep-inventory-v1-006,multistep,ok,True,0,,"{
+  ""shortage_skus"": [""SKU06-3"", ""SKU06-4""],
+  ""total_shortage_units"": 75,
+  ""largest_shortage_sku"": ""SKU06-3""
+}",inventory_check,0.3333,wrong_or_missing_fields,,
+multistep-inventory-v1-007,multistep,ok,True,0,,"```json
+{
+  ""shortage_skus"": [""SKU07-1"", ""SKU07-2""],
+  ""total_shortage_units"": 30,
+  ""largest_shortage_sku"": ""SKU07-1""
+}
+```",inventory_check,0.0,not_json,,
+multistep-inventory-v1-008,multistep,ok,True,0,,"{
+  ""shortage_skus"": [""SKU08-7""],
+  ""total_shortage_units"": 100,
+  ""largest_shortage_sku"": ""SKU08-7""
+}",inventory_check,0.3333,wrong_or_missing_fields,,
+multistep-inventory-v1-009,multistep,ok,True,0,,"{
+  ""available_units"": 185,
+  ""shortfall_units"": 0,
+  ""warehouses_with_stock"": [""WH09-1"", ""WH09-3"", ""WH09-5"", ""WH09-7""]
+}",inventory_check,0.6667,wrong_or_missing_fields,,
+multistep-inventory-v1-010,multistep,ok,True,0,,"{
+  ""shortage_skus"": [""SKU10-3"", ""SKU10-4""],
+  ""total_shortage_units"": 27,
+  ""largest_shortage_sku"": ""SKU10-3""
+}",inventory_check,0.6667,wrong_or_missing_fields,,
+long_gen-v1-001,long_gen,ok,True,,,"When you type www.example.com into your browser, you're initiating a process called DNS resolution. DNS, or Domain Name System, is like a phonebook for the internet. It translates human-readable domain names into IP addresses, which are the numerical addresses that computers use to communicate with each other. Your browser needs to know the IP address of the server hosting the example.com website to fetch the webpage.
+
+First, your browser sends a request to a recursive resolver, which is like a local librarian. If the resolver has the IP address of www.example.com in its cache, it will return it immediately. However, if it doesn't have the information, it will start a journey to find it. The resolver will first ask a root server, which is like a directory of all the top-level domains (TLDs). The root server doesn't know the exact IP address, but it knows which TLD server to ask next.
+
+The resolver then queries a TLD server, such as the .com server. This server knows which authoritative name server (ANS) holds the IP address for www.example.com. The TLD server directs the resolver to the correct ANS. The ANS, which is the final authority for example.com, provides the IP address of the server hosting the website.
+
+If the resolver has the IP address in its cache, it will use it for a certain period, as indicated by the Time to Live (TTL) value. The TTL is like a time limit on the information, ensuring that it doesn't become outdated. If the resolver doesn't have the IP address in its cache, it will fetch it from the ANS and store it for future lookups.
+
+DNS resolution is just the first step in loading a webpage. After resolving the domain name, your browser sends a request to the server's IP address to fetch the webpage. This process is separate from DNS resolution and involves additional steps like establishing a connection, receiving the HTML file, and rendering the webpage in your browser. DNS resolution is crucial for directing your browser to the correct server, but fetching the webpage itself involves further communication between your browser and the server.",,,,355,False
+long_gen-v1-002,long_gen,ok,True,,,"Imagine you have a large events table in PostgreSQL, with millions of rows, each representing an event that a user has participated in. The table has a user_id column, which uniquely identifies each user. Without an index, if you wanted to find all events for a specific user, the database would have to scan every single row in the table, checking the user_id of each row to see if it matches the user you're looking for. This is akin to searching for a specific book in a library by flipping through every page of every book, which is time-consuming and inefficient.
+
+To make this process more efficient, you can create an index on the user_id column. An index is like a table of contents or an index in the back of a book. Instead of scanning every single row, the database can quickly find the range of rows that belong to a specific user by looking up the index. This is similar to using the index in a book to find all mentions of a particular topic. The index allows the database to jump directly to the relevant part of the table, significantly reducing the number of rows it needs to inspect.
+
+Here’s a simple example of creating an index on the user_id column in PostgreSQL:
+
+```sql
+CREATE INDEX idx_user_id ON events (user_id);
+```
+
+Now, if you run a query like this:
+
+```sql
+SELECT * FROM events WHERE user_id = 12345;
+```
+
+PostgreSQL will use the index to quickly find the rows that match the user_id 12345, rather than scanning the entire table. This can be much faster, especially for large tables.
+
+However, creating an index does come with some costs. First, the index itself takes up storage space. Each index entry requires additional storage, which can add up, especially if the table is very large. Second, every time data in the indexed column changes (e.g., a user_id is updated), the index must be updated as well. This can add some overhead to write operations, as the database needs to maintain the integrity of the index.
+
+For example, if you update a user_id in the events table, the database must also update the index to reflect this change. This can be a small overhead, but it can add up over time, especially in a high-write environment.
+
+There are situations where a sequential scan might be preferred over using an index. For instance, if you are querying a small subset of rows and the table is not very large, the overhead of maintaining the index might outweigh the benefits. Additionally, if the query involves a large number of columns or complex conditions, the planner might decide that a sequential scan is more efficient.
+
+Another important consideration is that indexing every column is not a universal solution. While it might seem tempting to index every column to speed up all possible queries, this can lead to excessive storage usage and increased write overhead. Indexes should be carefully chosen based on the most common queries and the specific needs of the application.
+
+In summary, while indexes are a powerful tool for speeding up queries, they come with trade-offs. Understanding these trade-offs and using indexes judiciously can help optimize the performance of your PostgreSQL database.",,,,541,True
+long_gen-v1-003,long_gen,ok,True,,,"Imagine you're browsing the web and repeatedly request the same public image, like a logo or a profile picture. When your browser first requests this image, it's a cache miss. The browser doesn't have the image in its cache, so it sends a request to the server, which responds with the image and a set of instructions about how long it should be stored in the cache. This is called a cache hit when the browser retrieves the image from its cache on subsequent requests.
+
+Caching saves work by reducing the number of requests sent to the server. When a cache hit occurs, the browser can quickly display the image without waiting for a new request to the server. This is especially useful for frequently accessed resources like images, as it reduces the load on the server and speeds up the user experience.
+
+Freshness is a key concept in caching. When a resource is stored in the cache, it has a freshness lifetime, which is the period during which the resource is considered fresh and can be reused without needing to validate it with the server. If the freshness lifetime has expired, the resource is considered stale, and the browser must validate it with the server to ensure it hasn't changed. Reusing a fresh response means the browser can display the image without needing to check with the server, while validating a stored response involves sending a request to the server to confirm the image hasn't changed.
+
+For an ordinary response, the practical distinction between `Cache-Control: no-cache` and `Cache-Control: no-store` is significant. `Cache-Control: no-cache` means the browser should not reuse a cached response without first validating it with the server. This ensures the image is up-to-date but requires an additional request to the server. `Cache-Control: no-store`, on the other hand, means the browser should not store the response in the cache at all, ensuring no stale data is used but also requiring a fresh request each time.
+
+Let's consider a concrete example. When you first request the image, it's a cache miss, and the browser stores it in the cache with a freshness lifetime. On the second request, it's a cache hit, and the browser displays the image without needing to contact the server. However, if the image changes on the server, the freshness lifetime will eventually expire, and the next request will be a cache miss. The browser will then validate the stored response with the server to ensure it hasn't changed, and if it has, it will update the cache. This shows that while caching can significantly speed up repeated requests, it",,,,434,False
+long_gen-v1-004,long_gen,ok,True,,,"Sorting records in Python 3 can be a powerful tool for organizing data in a way that makes it easier to analyze and manipulate. Let's explore this concept using the list of tuples `records = [('A', 2), ('B', 1), ('C', 2)]` as our running example.
+
+### Understanding `sorted()` and `list.sort()`
+
+When you want to sort a list in Python, you have two primary methods to choose from: `sorted()` and `list.sort()`. Both methods allow you to sort a list, but they differ in a few key ways.
+
+#### `sorted()`
+The `sorted()` function returns a new list that is sorted, leaving the original list unchanged. This is useful when you want to keep the original list intact and work with a sorted version of it. Here's how you can use `sorted()` with our example:
+
+```python
+records = [('A', 2), ('B', 1), ('C', 2)]
+sorted_records = sorted(records)
+print(sorted_records)
+```
+
+The output will be:
+
+```
+[('B', 1), ('A', 2), ('C', 2)]
+```
+
+#### `list.sort()`
+On the other hand, the `list.sort()` method sorts the list in place, meaning it modifies the original list directly. This method does not return a new list but instead returns `None`. Here's how you can use `list.sort()` with our example:
+
+```python
+records = [('A', 2), ('B', 1), ('C', 2)]
+records.sort()
+print(records)
+```
+
+The output will be the same:
+
+```
+[('B', 1), ('A', 2), ('C', 2)]
+```
+
+### Key Function for Custom Sorting
+
+Sometimes, you might want to sort based on a specific criterion. For instance, you might want to sort the records by their second element (the number). Python's `sorted()` function allows you to specify a `key` function that determines the sorting criteria. Here's how you can sort the records by their second element:
+
+```python
+records = [('A', 2), ('B', 1), ('C', 2)]
+sorted_records = sorted(records, key=lambda x: x[1])
+print(sorted_records)
+```
+
+The output will be:
+
+```
+[('B', 1), ('A', 2), ('C', 2)]
+```
+
+In this case, the `key` function `lambda x: x[1]` extracts the second element of each tuple for comparison during sorting.
+
+### Stable Sorting and the Result
+
+When sorting, it's important to understand the concept of stability. A stable sort maintains the relative order of records with equal keys. In our example, both 'A' and 'C' have the same second element (2). The `sorted()` function in Python is stable, meaning that if two records have the same key, their original order is preserved. Therefore, in our sorted list, 'A' comes before 'C' because 'A' was originally before 'C' in the original list.
+
+### Sorting in Descending Order
+
+If you want to sort the records in descending order, you can use the `reverse=True` parameter. This parameter reverses the order of the sort. Here's how you can sort the records by their second element in descending order:
+
+```python
+records = [('A', 2), ('B', 1), ('C', 2)]
+sorted_records = sorted(records, key=lambda x: x[1], reverse=True)
+print(sorted_records)
+```
+
+The output will be:
+
+```
+[('C', 2), ('A', 2), ('B', 1)]
+```
+
+In this case, 'C' and 'A' are still in their original order because the stable sort preserves their relative order. 'B' is the last because it has the smallest second element.
+
+### Conclusion
+
+Sorting records in Python is a versatile and powerful feature that can be customized to fit various needs. Whether you use `sorted()` or `list.sort()`, understanding the differences and the concept of stability can help you manage your data more effectively. By using key functions and the `reverse=True` parameter, you can sort records in a way that best suits your data analysis or manipulation requirements.",,,,584,True
+long_gen-v1-005,long_gen,ok,True,,,"Let's dive into how a typical native C build using the Clang/LLVM toolchain works, using a simple program that adds two integers as an illustration. We'll follow the program through the various stages of compilation, optimization, and linking.
+
+### Preprocessing, Tokenization, Parsing, and Semantic Checks
+
+Imagine you have a small C program that adds two integers:
+
+```c
+#include <stdio.h>
+
+int main() {
+    int a = 5;
+    int b = 10;
+    int sum = a + b;
+    printf(""The sum is %d\n"", sum);
+    return 0;
+}
+```
+
+When you start the build process, the first step is **preprocessing**. The preprocessor reads the source code and processes directives like `#include` and `#define`. In our example, the `#include <stdio.h>` directive is processed, and the contents of the `stdio.h` header file are inserted into the source code. This step doesn't change the syntax of the code but prepares it for the next stages.
+
+Next, the preprocessed code is **tokenized**. The preprocessor output is broken down into tokens, which are the smallest units of the language (like keywords, identifiers, and literals). For example, the line `int a = 5;` is tokenized into `int`, `a`, `=`, and `5`.
+
+The **parser** then takes these tokens and constructs a **parse tree**. The parser checks if the tokens form valid C syntax. For instance, it ensures that `int a = 5;` is a valid variable declaration. If the syntax is correct, the parser generates an abstract syntax tree (AST), which is a structured representation of the program's syntax.
+
+Finally, the **semantic checker** examines the AST to ensure that the program is semantically correct. It checks things like type compatibility, scope, and whether all variables are properly declared before use. For example, it ensures that `a` and `b` are declared as integers before they are used in the addition operation.
+
+### Intermediate Representation and Optimization
+
+After the semantic checks, the compiler generates an **intermediate representation (IR)**. The IR is a low-level, platform-independent representation of the program. Clang/LLVM uses a form of IR called LLVM IR, which is a high-level assembly-like language. This IR is more abstract than machine code but still represents the program in a way that can be optimized.
+
+The IR is then **optimized**. Optimization is the process of transforming the IR to make the program run faster or use less memory. Different optimization passes can be applied, such as dead code elimination, loop unrolling, and constant folding. These optimizations are performed based on the specific needs of the program and the target architecture.
+
+### Machine-Code Generation, Object Files, and Linking
+
+Once the IR is optimized, the compiler generates **machine code**. This is the low-level, architecture-specific code that the CPU can execute directly. However, before the machine code is generated, the compiler produces an **object file**. An object file contains the machine code along with other information like symbol tables and relocation information. The object file is platform-specific and can be linked with other object files to form a complete executable.
+
+The **linker** takes the object files and combines them into a single executable. The linker resolves any unresolved symbols, such as function calls that are defined in other object files. For example, the `printf` function in our program is defined in the `stdio` library, and the linker ensures that the correct machine code for `printf` is included in the final executable.
+
+### Error Handling
+
+Now, let's follow our example program through the pipeline and see how different types of errors are handled:
+
+1. **Syntax/Type Error**: If you had a syntax error, such as `int a = 5; b = 10;`, the parser would fail to construct the AST, and the semantic checker would report a syntax error. This error would prevent the program from being compiled.
+
+2. **Unresolved-Symbol Link Error**: If you had a function call that was not defined, such as `printf(""Hello, world!\n"", non_existent_function());`, the linker would report an unresolved symbol error. This error occurs because the linker cannot find the definition of `non_existent_function`.
+
+3. **Runtime Error**: If you had a runtime error, such as `int a = 5; int b = 10; int sum = a + b; printf(""The sum is %d\n"", sum / 0);`, the error would occur when the program runs. In this case, the division by zero would cause a runtime error, such as a segmentation fault or an arithmetic exception.
+
+By understanding these stages and error types, you can better appreciate the complexity of the compilation process and how different tools and stages work together to produce a working executable.",,,,748,False
+long_gen-v1-006,long_gen,ok,True,,,"Mara stood by the lighthouse, her fingers tracing the weathered wood of the lantern. The storm was gathering, the sky a menacing gray. As she turned to head inside, her hand brushed against a small, crumpled piece of paper tucked inside the lantern. She unfolded it, her heart racing as she read the message scrawled in a hurried hand: ""Leave now. The lighthouse is unsafe.""
+
+Mara's mind raced. She had been here for years, and the lighthouse had never let her down. But the storm was fierce, and the lantern was damaged. She knew she had to make a decision quickly. She turned to her assistant, Tom, who was busy checking the foghorn. ""Tom, I need to go,"" she said, her voice steady but her hands trembling.
+
+Tom looked up, concern etched on his face. ""Are you sure, Mara? The storm is terrible.""
+
+Mara nodded, her resolve hardening. ""I need to check the lantern. It’s the only way to ensure the light is safe.""
+
+Tom hesitated, then nodded. ""Alright, but be careful. I’ll stay here and keep an eye on the storm.""
+
+Mara climbed the winding staircase, her heart pounding. The lantern was indeed damaged, but she managed to repair it just as the storm intensified. The wind howled, and the rain lashed against the windows. Mara worked quickly, her hands steady despite the fear gnawing at her.
+
+When she finally stepped outside, the storm was at its peak. The lighthouse light flickered, but it remained steady. Mara took a deep breath, feeling a surge of pride and determination. She had made it through, and the lighthouse was safe.
+
+As the storm began to subside, Mara made her decision. She would stay. The lighthouse was her home, her responsibility, and her sanctuary. She turned to Tom, who was watching her with a mix of relief and admiration. ""I’m staying,"" she said, her voice calm and resolute. ""The lighthouse needs me.""
+
+Tom nodded, a smile tugging at his lips. ""Good. We’ll get through this together.""",,,,334,False
+long_gen-v1-007,long_gen,ok,True,,,"Ivo and Nia stood in the dimly lit greenhouse, the hum of the cooling system a constant background noise. The air was thick with the scent of soil and the faint, sweet aroma of the genetically engineered crops. Today, however, the system had failed, and the temperature was rising dangerously. The digital display showed the temperature climbing past 25 degrees Celsius, a critical point for the plants' survival.
+
+""Let's start with the backup system,"" Ivo suggested, his voice steady but urgent. ""It's been offline for maintenance, but it should still work.""
+
+Nia shook her head, her eyes narrowing. ""We can't risk it. The backup is old and unreliable. We need to fix the primary system first. We can't afford to lose any of these crops.""
+
+Ivo sighed, his frustration clear. ""But we don't have time to replace the entire system. We need a quick fix.""
+
+Nia nodded, her expression softening. ""Alright, let's try the backup. But we need to be careful. If it fails, we'll have to improvise.""
+
+They split up, Ivo checking the primary system while Nia worked on the backup. Ivo found the issue quickly: a small, unnoticed leak in the coolant line. He quickly repaired it, but the backup system still wouldn't engage. Nia joined him, her face a mix of concern and determination.
+
+""Let's try something different,"" she said, her voice calm. ""Remember the thermal imaging we did last week? We noticed a slight heat signature near the coolant pump. It might be a loose connection.""
+
+Ivo nodded, his mind racing. ""That could be it. Let's check it out.""
+
+They found the loose connection and tightened it, but the backup system still wouldn't activate. Nia's face fell, and Ivo felt a wave of frustration. ""We need to think of something else,"" he said, his voice low.
+
+Nia's eyes lit up. ""What about the emergency cooling unit? It's designed to kick in if the primary and backup systems fail. We can use it as a temporary fix.""
+
+Ivo nodded, his mind racing. ""It's risky, but it might work. We'll need to reroute the coolant lines to the emergency unit.""
+
+They worked quickly, rerouting the coolant lines and activating the emergency unit. The temperature began to drop, and the plants started to perk up. Nia and Ivo stood back, their hearts pounding with relief.
+
+""Let's hope it holds,"" Nia said, her voice barely above a whisper.
+
+The emergency unit held, and the temperature stabilized. The plants began to recover, their leaves unfurling and their stems growing stronger. In the corner of the greenhouse, a single seedling had survived the crisis, its tiny leaves a symbol of hope.
+
+Ivo and Nia watched it, their hearts full of gratitude. They had faced a challenge and come through, their teamwork and quick thinking saving the greenhouse and its precious cargo. As the sun set over the lunar landscape, casting a golden glow over the greenhouse, they knew that their work was far from over, but for now, they could rest easy, knowing that one seedling had survived the night.",,,,508,True
+long_gen-v1-008,long_gen,ok,True,,,"The last train had just pulled out, and I was about to lock up the station when I saw a man standing by the platform, his violin case slung over his shoulder. He looked lost, and I couldn't help but feel a twinge of sympathy. ""Evening,"" I said, approaching him. ""You're in a bit of a bind, aren't you?""
+
+He nodded, his eyes darting around. ""I was supposed to catch the 8:30 to London, but it's been delayed. I can't just wait here all night, can I?""
+
+I checked my watch. ""It's 10:30. The next train is at 11:45. You could wait it out, but it's a long wait.""
+
+He sighed, running a hand through his hair. ""I can't. I have a performance in the morning, and I can't miss it.""
+
+I hesitated, knowing I should be closing up. ""Well, I could let you use the station master's office. It's not ideal, but it's better than nothing.""
+
+He looked surprised. ""Really? That would be amazing. Thank you.""
+
+I led him to the office, and as we walked, I noticed his violin case was unusually heavy. ""Mind if I take a look?"" I asked, gesturing to the case.
+
+He nodded, and I carefully opened it. Inside was a violin, but what caught my eye was a small, intricately carved wooden box. ""Is this yours?"" I asked, lifting it out.
+
+He looked taken aback. ""Yes, it is. It's my grandfather's. He gave it to me before he died.""
+
+I felt a pang of guilt. ""I'm sorry, I didn't mean to pry. I just thought it was... special.""
+
+He smiled, a warmth in his eyes. ""It is. Thank you for understanding.""
+
+I helped him settle in the office, and as I was about to leave, he called out, ""Ren, can I ask you something?""
+
+""Sure,"" I said, turning back.
+
+""Is it okay if I play a little? Just to pass the time?""
+
+I nodded, and he began to play. The music filled the small space, and for a moment, I forgot about the inconvenience. When he finished, I said, ""You're really good.""
+
+He smiled, and I realized I had made the right choice. ""I'm glad I could help. You should get some rest",,,,370,False
+long_gen-v1-009,long_gen,ok,True,,,"In the village of Eldoria, the sun hung low in the sky, casting long shadows over the flooded landscape. The villagers had gathered at the edge of the forest, their faces etched with worry. The familiar wooden bridge that spanned the river had been washed away, leaving the village isolated and in need of supplies. Sora, the village mapmaker, had been tasked with delivering a crucial message to the neighboring town of Luminara, which could provide the necessary aid.
+
+Sora handed the map to Tavi, the young courier, who had volunteered for the task. The map was old, its edges frayed and stained with age. Sora pointed to a route that led through the forest, but Tavi noticed something peculiar. ""Wait, Sora, I think there's a mistake here. The map says the river should be to the right, but the flood has changed the landscape.""
+
+Sora squinted at the map, her brow furrowed. ""You're right, Tavi. I remember the bridge being on the left side of the river. But the map is old, and it might not reflect the current situation. Let's follow the path to the right and see if we can find a way through.""
+
+Tavi nodded, his mind racing with possibilities. ""Alright, let's go. But if we get lost, we'll need to find a way back to the village.""
+
+They set off into the forest, the sound of rushing water echoing through the trees. The path was overgrown, and the ground was soft and muddy. Sora and Tavi walked in silence, their eyes scanning the terrain for any sign of the river. After a while, Tavi spotted a small stream that seemed to be the remnants of the river.
+
+""Look, Sora, it looks like the river has changed course. The map might be outdated, but it still has some useful information. The stream is to the right, and the map says the old bridge was on the left. We should follow the stream and see if we can find a way through.""
+
+Sora agreed, and they continued along the stream, their boots sinking into the soft earth. The forest was dense, and the path was difficult to follow, but they pressed on. As they walked, Sora and Tavi discussed the map and the changes in the landscape. They realized that the old bridge had been washed away, but there was a new bridge further down the stream.
+
+After several hours of walking, they emerged from the forest to find a small clearing. In the center of the clearing stood a new bridge, its wooden planks sturdy and strong. Tavi and Sora exchanged a look of relief and satisfaction. They had found the new bridge, and it was exactly where the map had predicted.
+
+They crossed the bridge and continued on their journey to Luminara. Upon arrival, they delivered the message and returned to Eldoria with the supplies they needed. Sora and Tavi had successfully navigated the flooded forest, and their journey had taught them the importance of adapting to change and trusting in the information they had.
+
+Back in the village, Sora sat down with her map and made a note of the changes. She corrected the old map, adding a new route that accounted for the new bridge and the altered landscape. The villagers gathered around her, their faces lighting up with pride as Sora explained the changes. She had not only completed her task but had also improved the map for future generations.
+
+The adventure had brought Sora and Tavi closer, and they knew that no matter what challenges lay ahead, they would face them together.",,,,601,False
+long_gen-v1-010,long_gen,ok,True,,,"Jules stood nervously in front of the judges, clutching a loaf of bread that was supposed to be his masterpiece. The aroma of fresh, crusty bread filled the air, but the sight of the loaf itself was a stark contrast to the golden perfection he had envisioned. The loaf was lopsided, with a noticeable gap in the middle, a flaw that Jules had been too proud to fix. This wasn't just a contest for him; it was a chance to prove himself to his grandmother, who had taught him everything he knew about baking. She had always said that perfection was the key to success, and Jules had taken that to heart.
+
+As Jules was about to present his loaf, he noticed another contestant, Sarah, struggling with her display. Her stand was wobbly, and she seemed on the verge of tears. Jules knew he had time to fix his own loaf, but he couldn't just stand by and watch someone else fail. ""Sarah, can I help you?"" he asked, his voice steady despite the butterflies in his stomach.
+
+Sarah nodded, her eyes wide with gratitude. ""I can't get this stand to stay up. I've tried everything."" Jules quickly assessed the situation and grabbed a few extra clips from his own station. ""Let's do this,"" he said, and together they managed to stabilize the stand just in time.
+
+The judges nodded approvingly as Jules presented his loaf, but it was clear that the judges were more impressed by his character than the bread itself. ""We appreciate your help, Jules,"" Sarah said, her voice filled with genuine thanks. ""You really saved the day.""
+
+When the results were announced, Jules didn't win first prize. Instead, he received a special commendation for his community spirit and the help he had given Sarah. As he walked out of the contest, he saw the community gathering around the display table, sampling the bread and chatting with the contestants. A young girl approached him, holding a piece of his bread. ""This is the best bread I've ever had,"" she said, her eyes wide with delight. Jules smiled, feeling a sense of pride and belonging that went far beyond any prize.",,,,363,False

@@ -1,0 +1,101 @@
+{
+  "run": "results/raw/sw_kv_split16k_gpuonly_fifo_request",
+  "offered": 80,
+  "qa": {
+    "offered": 30,
+    "completed": 23,
+    "correct": 22,
+    "missing": 0,
+    "completion_rate": 0.7666666666666667,
+    "accuracy_among_completed": 0.9565217391304348,
+    "success_rate_all_offered": 0.7333333333333333,
+    "mean_token_f1_all_offered_squad": 0.9785714285714286,
+    "by_type": {
+      "long_context": {
+        "offered": 10,
+        "completed": 3,
+        "correct": 3,
+        "missing": 0,
+        "completion_rate": 0.3,
+        "accuracy_among_completed": 1.0,
+        "success_rate_all_offered": 0.3,
+        "mean_token_f1_all_offered_squad": null
+      },
+      "short_qa": {
+        "offered": 20,
+        "completed": 20,
+        "correct": 19,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.95,
+        "success_rate_all_offered": 0.95,
+        "mean_token_f1_all_offered_squad": 0.9785714285714286
+      }
+    }
+  },
+  "multistep": {
+    "offered": 40,
+    "completed": 38,
+    "correct": 13,
+    "missing": 0,
+    "completion_rate": 0.95,
+    "accuracy_among_completed": 0.34210526315789475,
+    "success_rate_all_offered": 0.325,
+    "mean_field_fraction_all_offered": 0.433335,
+    "by_subtype": {
+      "document_lookup": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 9,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.9,
+        "success_rate_all_offered": 0.9,
+        "mean_field_fraction_all_offered": 0.9
+      },
+      "inventory_check": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 2,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.2,
+        "success_rate_all_offered": 0.2,
+        "mean_field_fraction_all_offered": 0.33333
+      },
+      "log_investigation": {
+        "offered": 10,
+        "completed": 8,
+        "correct": 2,
+        "missing": 0,
+        "completion_rate": 0.8,
+        "accuracy_among_completed": 0.25,
+        "success_rate_all_offered": 0.2,
+        "mean_field_fraction_all_offered": 0.2
+      },
+      "sales_analysis": {
+        "offered": 10,
+        "completed": 10,
+        "correct": 0,
+        "missing": 0,
+        "completion_rate": 1.0,
+        "accuracy_among_completed": 0.0,
+        "success_rate_all_offered": 0.0,
+        "mean_field_fraction_all_offered": 0.30001
+      }
+    }
+  },
+  "long_gen": {
+    "offered": 10,
+    "completed": 10,
+    "completion_rate": 1.0,
+    "word_range_ok": 3,
+    "rubric_quality": "not scored (judge after the timed run)"
+  },
+  "auto_scored": {
+    "offered": 70,
+    "completed": 61,
+    "correct": 35
+  },
+  "correct_tasks_per_s": 0.1765
+}

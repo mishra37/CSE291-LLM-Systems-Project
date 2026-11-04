@@ -1,0 +1,56 @@
+{
+  "args": {
+    "workload": "workloads/generated/agentdoc4000.jsonl",
+    "name": "sw_ctx_4000_gpuonly_fifo_task",
+    "sched": "fifo_task",
+    "k": 4,
+    "url": "http://127.0.0.1:8080",
+    "server_args": "-c 65536 -np 4 --cache-ram 0",
+    "req_timeout": 300,
+    "max_tasks": null,
+    "sample_ms": 100,
+    "no_warmup": false,
+    "out_dir": "results/raw"
+  },
+  "host": "ip-172-31-38-201.us-west-2.compute.internal",
+  "git_commit": "144bceae9f29a26f825ba626c1b4722e466b8f51",
+  "started": "2026-11-04T03:36:18",
+  "server": {
+    "total_slots": 4,
+    "model_path": "/home/ec2-user/llmsys/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "n_ctx": 16384
+  },
+  "workload_meta": {
+    "args": {
+      "name": "agentdoc4000",
+      "seed": 0,
+      "n_tasks": 40,
+      "mix": "multistep=0.5,short_qa=0.5",
+      "arrival": "batch",
+      "rate": 0.5,
+      "burst_size": 16,
+      "burst_gap": 30.0,
+      "prefix": "short_shared",
+      "ctx_tokens": null,
+      "out_tokens": 64,
+      "steps": 5,
+      "tool_delay": 2.0,
+      "tool_tokens": 200,
+      "doc_tokens": 4000,
+      "n_docs": 4,
+      "out_dir": "/home/ec2-user/CSE291-LLM-Systems-Project/workloads/generated"
+    },
+    "git_commit": "144bceae9f29a26f825ba626c1b4722e466b8f51",
+    "n_tasks": 40,
+    "types": {
+      "short_qa": 25,
+      "multistep": 15
+    },
+    "total_steps": 100,
+    "est_peak_context": {
+      "p50": 234,
+      "max": 5410
+    },
+    "duration_s": 0.0
+  }
+}
