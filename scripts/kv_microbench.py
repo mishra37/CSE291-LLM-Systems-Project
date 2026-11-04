@@ -10,7 +10,7 @@ For each context size N (one slot, nothing else running) this measures, as clien
 Every trial uses a fresh random prompt so nothing is reused by accident.
 
   # SSD path: server started with --cache-ram 0 --slot-save-path <dir>
-  python scripts/kv_microbench.py --mode ssd --out results/raw/micro_kv/ssd.csv
+  python scripts/kv_microbench.py --mode ssd --out results/raw/micro_kv/ssd_nvme.csv
   # RAM path: server started with --cache-ram 8192
   python scripts/kv_microbench.py --mode ram --out results/raw/micro_kv/ram.csv
 Run it through `bash scripts/sweep.sh micro`, which starts the right servers.
@@ -65,7 +65,8 @@ def trial(url, mode, n, rng):
     erase = lambda: post(f"{url}/slots/0?action=erase")
     suffix = post(f"{url}/tokenize", {"content": " Now answer briefly."})[0]["tokens"]
     prompt = tokens(url, n, rng)
-    erase()
+    if mode == "ssd":  # slot actions need --slot-save-path; in ram mode the unique prompt start already prevents reuse
+        erase()
     row = {"n_tokens": n}
     row["recompute_ms"], row["recompute_prompt_n"] = complete(url, prompt)
     row["gpu_kept_ms"], row["gpu_kept_prompt_n"] = complete(url, prompt + suffix)

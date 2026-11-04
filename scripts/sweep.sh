@@ -7,7 +7,7 @@
 #   bash scripts/sweep.sh ctx     # synthetic agents starting from 1k/4k/12k-token documents  (~45 min)
 #   bash scripts/sweep.sh kv      # KV memory options at K=8: split vs unified pool, q8_0 KV  (~25 min)
 #   bash scripts/sweep.sh rate    # Poisson arrivals 0.25/0.5/1 tasks/s, v1, K=4              (~40 min)
-#   bash scripts/sweep.sh micro   # KV restore cost: recompute vs GPU vs SSD vs host RAM      (~5 min)
+#   bash scripts/sweep.sh micro   # KV restore cost: recompute vs GPU vs SSD (EBS, NVMe) vs RAM (~8 min)
 #   REPS=2 bash scripts/sweep.sh slots   # also run a second repeat (_r2) of every config
 # Run names: sw_<group>_<value>_<gpuonly|ramcache|...>_<scheduler>[_r<n>]
 set -uo pipefail
@@ -74,10 +74,15 @@ rate)  # slower arrivals = less contention, so fewer evictions and idle slots ma
     done
   done ;;
 micro)  # one slot, 32k tokens: recompute vs keep in GPU vs SSD save/restore vs host-RAM cache
-  SLOT_DIR="${SLOT_DIR:-$HOME/llmsys/slots}"; mkdir -p "$SLOT_DIR"
-  CTX=32768 NP=1 bash setup/launch_server.sh --cache-ram 0 --slot-save-path "$SLOT_DIR"
-  $PY scripts/kv_microbench.py --mode ssd --out results/raw/micro_kv/ssd.csv
-  rm -f "$SLOT_DIR"/micro_*.bin
+  # SSD twice: EBS (network disk, the default root volume) and the instance's local NVMe
+  declare -A DISKS=([ebs]="$HOME/llmsys/slots" [nvme]="/opt/dlami/nvme/slots")
+  for D in ebs nvme; do
+    DIR=${DISKS[$D]}
+    mkdir -p "$DIR" 2>/dev/null || { sudo mkdir -p "$DIR" && sudo chown "$USER" "$DIR"; } || { echo "!! no $DIR"; continue; }
+    CTX=32768 NP=1 bash setup/launch_server.sh --cache-ram 0 --slot-save-path "$DIR"
+    $PY scripts/kv_microbench.py --mode ssd --out "results/raw/micro_kv/ssd_$D.csv"
+    rm -f "$DIR"/micro_*.bin
+  done
   CTX=32768 NP=1 bash setup/launch_server.sh --cache-ram 8192
   $PY scripts/kv_microbench.py --mode ram --out results/raw/micro_kv/ram.csv ;;
 *) echo "unknown group: $GROUP"; exit 1 ;;
