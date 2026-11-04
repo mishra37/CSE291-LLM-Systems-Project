@@ -22,6 +22,7 @@ Usage:
   python workloads/generate.py --name mixed --n-tasks 200 --arrival poisson --rate 0.5
   python workloads/generate.py --name ctx4k --mix long_context=1 --ctx-tokens 4000 --arrival batch
   python workloads/generate.py --name delay5 --mix multistep=1 --tool-delay 5 --steps 6
+  python workloads/generate.py --name agentdoc8k --mix multistep=1 --doc-tokens 8000 --steps 5
 """
 import argparse
 import json
@@ -93,8 +94,10 @@ def make_task(rng, kind, args, system, prefix_group, docs):
                   "max_tokens": out(512, 1024)}]
     elif kind == "multistep":
         n = pick(rng, args.steps, 3, 8)
-        steps = [{"tool_delay_s": 0.0, "user": "Task: " + text(rng, rng.randint(80, 200)),
-                  "max_tokens": out(64, 160)}]
+        task = "Task: " + text(rng, rng.randint(80, 200))
+        if args.doc_tokens:  # agent starts from a large document, e.g. a file or codebase it was handed
+            task = f"Document:\n{text(rng, args.doc_tokens)}\n\n{task}"
+        steps = [{"tool_delay_s": 0.0, "user": task, "max_tokens": out(64, 160)}]
         for _ in range(n - 1):
             delay = args.tool_delay if args.tool_delay is not None else round(rng.uniform(0.5, 5.0), 2)
             tool = rng.choice(TOOLS)
@@ -159,6 +162,7 @@ def main():
     ap.add_argument("--steps", type=int, help="multistep step count")
     ap.add_argument("--tool-delay", type=float, help="seconds per tool call")
     ap.add_argument("--tool-tokens", type=int, help="tokens per tool result")
+    ap.add_argument("--doc-tokens", type=int, help="multistep: prepend a document of this size to step 0")
     ap.add_argument("--n-docs", type=int, default=4, help="distinct documents for shared_doc")
     ap.add_argument("--out-dir", default=str(Path(__file__).parent / "generated"))
     args = ap.parse_args()
