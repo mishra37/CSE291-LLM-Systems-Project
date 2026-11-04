@@ -1,0 +1,8 @@
+date: 2026-11-03T21:05:13+00:00
+host: ip-172-31-44-154.us-west-2.compute.internal
+llama.cpp commit: 785322d17f2d51e5185cf996a1f4e46d87640841
+model: /home/ec2-user/llmsys/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf (4.4G)
+cuda arch: 89
+Build cuda_13.2.r13.2/compiler.37434383_0
+NVIDIA L4, 23034 MiB, 595.112.07
+cpus: 4  ram: 15G

@@ -1,5 +1,37 @@
 # Fixed task collection
 
+## Current revision: v2
+
+Use `tasks/v2/` for new calibration runs. It retains the same 80 tasks, fixture
+values, QA inputs, reference answers, writing rubrics, and scoring rules as v1.
+Every task has a new v2 ID plus its parent ID and parent-record checksum.
+The v1 files and first smoke-test outputs are preserved.
+See the [v2 calibration report](../results/calibration_v2_2026-11-04/README.md):
+16/16 tasks executed under each FIFO; JSON formatting passed for all four
+multistep examples, but value correctness and writing length failures remain.
+
+Changes in v2:
+- All 40 multistep tasks expose the required field types in the initial and final
+  prompt. Event and section chains explicitly contain ID strings, not objects.
+- Final-step instructions ask for a compact JSON object, no fences or explanation,
+  and a fresh check against raw tool results rather than trusting earlier summaries.
+- Intermediate model replies retain a 128-token cap; final replies have 256 tokens.
+  Recomputed peak budget estimates are 1,139–2,603 tokens, including output and margin.
+- All ten writing tasks repeat the unchanged word range, specify that it covers
+  the entire response, and give a target length and a planning/revision instruction.
+  Input prompts are now 260–296 upstream tokens. Output caps remain 512/1,024.
+
+```bash
+python -m workloads.build_v2 --tokenizer /path/to/tokenizer.json
+python -m workloads.validate_collection --tasks-dir workloads/tasks/v2
+python -m runner.run --workload workloads/tasks/v2 --sched fifo_request -k 1 --name v2_validation
+```
+
+The builder derives v2 deterministically from v1. It never changes the v1 source.
+The family descriptions and original authoring commands below document v1;
+v2 uses the changes above. Both versions remain accepted by the runner.
+
+
 `tasks/v1/` now contains all **80 planned task definitions**: 20 short QA, 10
 long-context QA, 10 long generation, and 40 multistep tasks. The multistep tasks
 comprise 10 each of sales analysis, log investigation, document lookup, and
@@ -10,8 +42,8 @@ Two multistep examples are available separately in
 [`tasks/previews/multistep_review.md`](tasks/previews/multistep_review.md), with
 machine-readable definitions in `tasks/previews/multistep.jsonl`. These are
 the original sales and log examples. Their fixtures are preserved in the first
-task of each subtype in the expanded collection. Runtime tools, runner integration,
-and the structured-output scorer are still pending.
+task of each subtype in the expanded collection. Scripted fixture execution, runner integration, and final JSON scoring are implemented;
+see [runner instructions](../runner/README.md).
 
 ## Short QA
 
@@ -96,7 +128,8 @@ Passing requires valid execution, at least 12/14 overall, no criterion below 1,
 full correctness/consistency credit, the requested word range, and no listed
 critical failure. Word counts use `len(text.split())` on the entire response.
 These rules are fixed operational definitions for this development set, not
-claims of universal writing quality. No responses have been generated or judged.
+claims of universal writing quality. One writing task now has saved AWS responses; semantic rubric judging remains
+pending, and those responses failed the requested word range.
 The QA exact-match scorer does not evaluate these writing tasks.
 
 ```bash
@@ -135,7 +168,7 @@ The runner must reveal one result after each prescribed tool operation, retain
 the complete history, and generate each model response. Tool order is scripted;
 these tasks do not implement model-directed tool selection. Wrong intermediate
 answers do not cancel remaining work. Tool exceptions are execution failures.
-These files are task definitions and fixtures, not an executable tool runtime.
+The runner executes these fixtures locally, in the prescribed order.
 
 Every output is capped at 128 tokens with natural EOS. Token budget estimates
 range from 835 to 2,275 tokens, including allowances for earlier replies, the
@@ -146,8 +179,8 @@ reference JSON fits within the final output cap for every task.
 
 Final answers are structured JSON with exact typed fields. Object key order and
 whitespace do not matter; extra fields fail and arrays follow the requested order.
-Reference calculations are implemented; judging actual saved model outputs is
-not yet connected. No AWS accuracy or performance results exist for these tasks.
+Reference calculations and final structured-JSON scoring are implemented in the runner. A first seven-task AWS smoke test is recorded in
+[smoke results](../results/smoke_2026-11-04/README.md); the full collection is not yet measured.
 
 ```bash
 python -m workloads.build_multistep --tokenizer /path/to/tokenizer.json
@@ -181,16 +214,18 @@ Read the family review files and flag concerns by task ID. There is no review
 checklist, sign-off sheet, or approval gate. The separate family validators
 remain available; `python workloads/validate_tasks.py` checks short QA by default.
 
-No AWS inference has been performed for this collection. Short QA, long-context
+Seven representative tasks have been run on AWS under both FIFO policies; see
+[smoke results](../results/smoke_2026-11-04/README.md). Short QA, long-context
 QA, and long generation have upstream tokenizer measurements; multistep budgets
 include allowances for model replies that have not yet been generated.
-Deployed-server tokenization and fit checks remain pending for every family.
+The seven smoke tasks fit without context truncation; full-collection deployed
+tokenization and history-fit checks remain pending.
 Do not treat word counts or valid answer offsets as proof of deployed-server fit.
 
-## Execution contract (next integration step)
+## Execution contract
 
 The canonical records are separate from experiment arrival schedules and K.
-They are **not directly accepted by the existing `runner.run` input format**.
+The runner accepts either one family JSONL or the entire `tasks/v1/` directory.
 When exporting a record, construct only this model input:
 
 ```text
@@ -210,13 +245,12 @@ the recorded token counts correspond to that exact prompt.
 
 The model receives neither the `evaluation` object nor source/review metadata.
 The QA quality-validation settings are temperature 0, at most 32 output
-tokens, and natural end-of-sequence stopping (`ignore_eos=false`). The current
-client forces `ignore_eos=true` and the runner does not save or score response
-text; those require a subsequent integration change before quality validation.
+tokens, and natural end-of-sequence stopping (`ignore_eos=false`). The runner passes these settings to the client and saves response text and
+terminal/truncation flags. Legacy synthetic tasks retain their forced-EOS setting.
 
 The offline scorer in `evaluation/score_qa.py` now implements QA scoring; see
 [evaluation instructions](../evaluation/README.md) for the saved-output contract
-and metric definitions. Runner output capture/export integration is still pending.
+and metric definitions. The runner exports this prediction schema and evaluates QA after the timed replay.
 For short QA, it uses SQuAD-style normalized exact match and token F1 against
 the best matching reference: lowercase, remove ASCII punctuation and English
 articles (`a`, `an`, `the`), and collapse whitespace. An answer embedded in a

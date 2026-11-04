@@ -198,7 +198,25 @@ def validate_multistep(task):
             raise ValueError("A tool bundle is unnecessary for this trace")
     if task["generation"] != {"max_tokens": 128, "temperature": 0.0, "ignore_eos": False}:
         raise ValueError("Unexpected generation settings")
+    caps = [step.get("max_tokens", task["generation"]["max_tokens"]) for step in steps]
+    if any(type(cap) is not int or cap not in (128, 256) for cap in caps):
+        raise ValueError("Invalid step output budget")
+    if any(cap != 128 for cap in caps[:-1]):
+        raise ValueError("Intermediate steps must retain the 128-token cap")
+    if task.get("dataset_version") == "v2":
+        if task["output_types"] != task["evaluation"]["required_types"] or caps[-1] != 256:
+            raise ValueError("Public answer types or final output budget mismatch")
+        for field, kind in task["output_types"].items():
+            declaration = f"- {field}: {kind}"
+            if declaration not in task["initial_prompt"] or declaration not in steps[-1]["instruction"]:
+                raise ValueError("Answer field type must be public at the initial and final step")
     length = task["length"]
+    known = length["known_prompt_tokens_by_step"]
+    budgets = [n + sum(caps[:i]) + caps[i] + length["safety_margin_tokens"] for i, n in enumerate(known)]
+    if len(known) != len(steps) or length["budget_tokens_by_step"] != budgets or length["peak_budget_tokens"] != max(budgets):
+        raise ValueError("Context budget does not match per-step output allowances")
+    if length.get("reference_answer_tokens", 0) > caps[-1]:
+        raise ValueError("Reference JSON exceeds final output budget")
     if length["peak_budget_tokens"] > length["context_limit"]:
         raise ValueError("Estimated context budget exceeded")
 

@@ -1,0 +1,6 @@
+{
+  "base_commit": "555d9b4f2e6b02e0133ee02fe4f706f7d1b35120",
+  "includes_uncommitted_runner_changes": true,
+  "source_archive_sha256": "bd183b9dec319c8855146bb07f92d81b8c3755a000b3514f4a046da0400d7e88",
+  "purpose": "v2 task calibration: two QA controls, ten writing tasks, four multistep subtypes; not a policy comparison"
+}

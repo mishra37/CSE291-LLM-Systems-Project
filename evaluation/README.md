@@ -63,12 +63,12 @@ model or an external judge. Unit checks run with:
 python -m unittest discover -s tests -v
 ```
 
-**Integration status:** the existing performance runner does not yet export this
-predictions schema or consume the canonical task files. It also forces EOS to be
-ignored. Connecting the task exporter, natural-EOS settings, response capture,
-and reliable terminal/truncation flags to the runner is still required. Current
-test scores are synthetic checks, not measured Qwen accuracy. Existing pilot
-summary completion counts use the older, less strict definition.
+**Integration status:** the runner consumes the fixed task files, respects their
+generation settings, and exports `predictions.jsonl`. It automatically scores QA
+and multistep final JSON after the timed run, writing `quality.jsonl`. Writing
+word counts are automatic; semantic rubric judgments remain pending. See
+[runner instructions](../runner/README.md). Local HTTP tests use canned responses,
+not real Qwen inference. Historical pilot counts used the older completion rules.
 
 ## Long generation (task rubrics created; judging integration pending)
 

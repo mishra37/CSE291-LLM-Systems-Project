@@ -1,0 +1,8 @@
+task_id,type,n_steps,steps_done,status,arrival_s,t_arrive,t_done,latency_s,admit_wait_s,queue_s,tool_s,model_s,gen_tokens,est_peak_context
+short_qa-v1-001,short_qa,1,1,ok,0,0.0008,0.1105,0.1097,0.0,0.0001,0.0,0.109,3,
+long_context-v1-001,long_context,1,1,ok,0,0.0009,0.7712,0.7703,0.0,0.1091,0.0,0.6607,7,1813
+long_gen-v1-001,long_gen,1,1,ok,0,0.0009,9.4364,9.4355,0.0,0.7698,0.0,8.6651,456,146
+multistep-logs-v1-001,multistep,3,3,ok,0,0.0009,31.8553,31.8544,0.0,24.3218,0.2012,7.3302,367,984
+multistep-documents-v1-001,multistep,3,3,ok,0,0.0009,32.8744,32.8734,0.0,27.6606,0.2018,5.0095,250,916
+multistep-inventory-v1-001,multistep,3,3,ok,0,0.0009,35.481,35.48,0.0,27.9219,0.2019,7.3548,371,905
+multistep-sales-v1-001,multistep,5,5,ok,0,0.0009,38.8661,38.8652,0.0,28.8263,0.4026,9.6344,481,1251

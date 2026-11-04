@@ -47,12 +47,11 @@ class LlamaClient:
         return out
 
     async def complete(self, prompt, max_tokens, slot=-1, clock=time.monotonic, ignore_eos=True, temperature=0.0):
-        """Stream one completion. Synthetic workloads force a fixed output length (ignore_eos)
-        so runs are comparable; the fixed task collection stops naturally (ignore_eos=False).
+        """Stream one completion; fixed tasks pass their natural-EOS generation settings.
 
         Returns {status, error, text, t_first_token, t_done, final}; `final` is llama.cpp's last
-        stream message (timings, id_slot, truncated, ...), empty if it never arrived. status is
-        ok | http_<code> | error | timeout | conn_error.
+        stream message (timings, id_slot, truncated, ...). status is ok | http_<code> | error |
+        timeout | conn_error.
         """
         payload = {"prompt": prompt, "n_predict": max_tokens, "ignore_eos": ignore_eos,
                    "cache_prompt": True, "temperature": temperature, "stream": True, "id_slot": slot}
@@ -89,5 +88,13 @@ class LlamaClient:
         except Exception as e:  # never let one bad response kill a scheduler worker
             out.update(status="error", error=f"{type(e).__name__}: {e}"[:300])
         out["text"] = "".join(pieces)
+        out["response_complete"] = bool(out["final"].get("stop"))
+        if out["status"] == "ok":
+            if not out["response_complete"]:
+                out.update(status="incomplete", error="Stream ended without a terminal completion message")
+            elif out["final"].get("truncated"):
+                out.update(status="truncated", error="Server truncated the context")
+            elif not out["text"].strip():
+                out.update(status="empty_output", error="Empty model response")
         out["t_done"] = clock()
         return out

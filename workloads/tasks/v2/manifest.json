@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "dataset_version": "v2",
+  "status": "draft_development",
+  "total_tasks": 80,
+  "task_types": {
+    "long_context": 10,
+    "long_gen": 10,
+    "multistep": 40,
+    "short_qa": 20
+  },
+  "planned_model_calls": 252,
+  "planned_tool_calls": 172,
+  "checksum_method": "UTF-8 JSON per record, sort_keys=True, ensure_ascii=False, separators=(',', ':'), LF after each record; original record order retained.",
+  "files": [
+    {
+      "path": "short_qa.jsonl",
+      "tasks": 20,
+      "sha256_canonical_jsonl": "7821bb6a405a5cec00527fa7c0decb9cb665c4f0bc096b43e07481a36b224381"
+    },
+    {
+      "path": "long_context.jsonl",
+      "tasks": 10,
+      "sha256_canonical_jsonl": "2799d68f7b349e7dd56f51d078f66032ba4167777ecd418d95326e18df9adb79"
+    },
+    {
+      "path": "long_generation.jsonl",
+      "tasks": 10,
+      "sha256_canonical_jsonl": "93025e034bc0d10ef421e86ee9d99a237e8164bdaa5b78837d544eaee155f8d2"
+    },
+    {
+      "path": "multistep.jsonl",
+      "tasks": 40,
+      "sha256_canonical_jsonl": "39812d2be384920f2bdb811a14eb03248b48c74cf7b9d8d0588bf09b6c5b41aa"
+    }
+  ],
+  "measurement_status": "Offline definitions validated. Consult calibration reports for inference outcomes; token budgets are estimates until verified with actual model history."
+}

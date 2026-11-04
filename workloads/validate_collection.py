@@ -39,13 +39,20 @@ def inspect(root):
         all_tasks.extend(records)
     if len({t["task_id"] for t in all_tasks}) != 80:
         raise ValueError("Duplicate task ID across collections")
-    return {"schema_version": 1, "dataset_version": "v1", "status": "draft_development",
+    versions = {t.get("dataset_version", "v1") for t in all_tasks}
+    if len(versions) != 1:
+        raise ValueError("Mixed dataset versions")
+    version = versions.pop()
+    if version not in ("v1", "v2") or any(f"-{version}-" not in t["task_id"] for t in all_tasks):
+        raise ValueError("Task IDs do not match dataset version")
+    return {"schema_version": 1, "dataset_version": version, "status": "draft_development",
             "total_tasks": 80, "task_types": dict(sorted(Counter(t["type"] for t in all_tasks).items())),
             "planned_model_calls": sum(t["execution"]["model_calls"] for t in all_tasks),
             "planned_tool_calls": sum(t["execution"]["tool_calls"] for t in all_tasks),
             "checksum_method": "UTF-8 JSON per record, sort_keys=True, ensure_ascii=False, separators=(',', ':'), LF after each record; original record order retained.",
             "files": entries,
-            "measurement_status": "Task definitions validated offline. No inference results; runtime integration and deployed-server checks pending."}
+            "measurement_status": ("Task definitions validated offline. No inference results; runtime integration and deployed-server checks pending." if version == "v1" else
+                "Offline definitions validated. Consult calibration reports for inference outcomes; token budgets are estimates until verified with actual model history.")}
 
 
 if __name__ == "__main__":

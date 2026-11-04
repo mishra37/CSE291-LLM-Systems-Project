@@ -1,0 +1,6 @@
+{
+  "base_commit": "555d9b4f2e6b02e0133ee02fe4f706f7d1b35120",
+  "includes_uncommitted_runner_changes": true,
+  "source_archive_sha256": "c1998a1268a27c855961575e08689fd08f95aa4997031d387497bf2a2a2757a8",
+  "purpose": "software smoke test, not policy comparison"
+}

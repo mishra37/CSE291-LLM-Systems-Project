@@ -1,0 +1,7 @@
+{"task_id": "short_qa-v1-001", "arrival_s": 0, "tool_delays_s": [0]}
+{"task_id": "long_context-v1-001", "arrival_s": 0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v1-001", "arrival_s": 0, "tool_delays_s": [0]}
+{"task_id": "multistep-sales-v1-001", "arrival_s": 0, "tool_delays_s": [0, 0.1, 0.1, 0.1, 0.1]}
+{"task_id": "multistep-logs-v1-001", "arrival_s": 0, "tool_delays_s": [0, 0.1, 0.1]}
+{"task_id": "multistep-documents-v1-001", "arrival_s": 0, "tool_delays_s": [0, 0.1, 0.1]}
+{"task_id": "multistep-inventory-v1-001", "arrival_s": 0, "tool_delays_s": [0, 0.1, 0.1]}

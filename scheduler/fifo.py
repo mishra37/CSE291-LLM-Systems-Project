@@ -4,15 +4,9 @@ Every scheduler exposes the same interface to the runner:
     async with sched.task(task) as ticket:   # task-level admission
         res = await sched.request(req, ticket)  # one model call; req = {"prompt", "max_tokens"}
 and fills req["t_enqueue"] / req["t_dispatch"] so the runner can compute queueing time.
-req may also carry "ignore_eos" and "temperature" (defaults: True, 0.0).
 """
 import asyncio
 import contextlib
-
-
-def send(client, req, clock, slot=-1):
-    return client.complete(req["prompt"], req["max_tokens"], slot=slot, clock=clock,
-                           ignore_eos=req.get("ignore_eos", True), temperature=req.get("temperature", 0.0))
 
 
 class FifoRequestScheduler:
@@ -50,7 +44,7 @@ class FifoRequestScheduler:
         while True:
             req, fut = await self.queue.get()
             req["t_dispatch"] = self.clock()
-            fut.set_result(await send(self.client, req, self.clock))
+            fut.set_result(await self.client.complete(req["prompt"], req["max_tokens"], clock=self.clock, **req.get("generation", {})))
 
 
 class FifoTaskScheduler:
@@ -83,7 +77,7 @@ class FifoTaskScheduler:
 
     async def request(self, req, ticket=None):
         req["t_enqueue"] = req["t_dispatch"] = self.clock()
-        return await send(self.client, req, self.clock, slot=ticket)
+        return await self.client.complete(req["prompt"], req["max_tokens"], slot=ticket, clock=self.clock, **req.get("generation", {}))
 
 
 SCHEDULERS = {s.name: s for s in (FifoRequestScheduler, FifoTaskScheduler)}
