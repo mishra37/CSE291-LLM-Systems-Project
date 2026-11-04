@@ -31,7 +31,7 @@ memory, so that more tasks finish without running out of memory?
     scorer checks and limits on what their plots establish
 - **Not done yet:**
   - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
-  - repeat runs of the sweeps (each sweep config ran once)
+  - repeat runs of the older v1 sweeps (each v1 config ran once)
   - the remaining controlled v2 sweeps, a narrative Phase 1 report, and the
     Phase 2 scheduler
 
@@ -65,14 +65,59 @@ the low exact-answer scores and output lengths need attention before claiming
 a quality-neutral speedup. See the [raw runs](results/raw/) and
 [core CSVs and curves](results/phase1_v2_batch/).
 
+### Controlled v2 core curves and current takeaway
+
+In the first four plots, shaded ranges show the minimum and maximum across the
+three repeats at each setting. `K` is the scheduler limit; the server stayed at
+four slots and 16,384 total context tokens in every run.
+
+![Completed tasks per second by scheduler concurrency K](results/phase1_v2_batch/throughput_completed_tasks_s.png)
+
+![Task completion latency p95 by scheduler concurrency K](results/phase1_v2_batch/latency_p95_s.png)
+
+![Task queue time p95 by scheduler concurrency K](results/phase1_v2_batch/queue_p95_s.png)
+
+![Peak GPU memory by scheduler concurrency K](results/phase1_v2_batch/peak_gpu_mib.png)
+
+![Task queue time p95 by type, scheduler, and K](results/phase1_v2_batch/task_type_queue_p95.png)
+
+The main finding so far is that raising `K` from 1 to 4 increased completed
+tasks/s for both FIFOs, but the preferable FIFO depends on `K` and the metric.
+At K=4, request FIFO completed about 27% more tasks/s than task FIFO (0.324
+versus 0.255), while task FIFO had a lower median task latency (54 versus 73 s)
+and a higher p95 (210 versus 184 s). At K=2, task FIFO was about 7% ahead on
+throughput and had lower median and p95 task latency. The multistep tasks had
+much higher queue p95 than short QA in this batch; the task ordering and policy
+both need examination before calling this scheduler starvation.
+
+Peak GPU memory remained near 5,920 MiB across all K values because the
+server's four slots and total KV allocation were fixed. These core runs show a
+scheduling trade-off under comfortable memory use; they do not yet identify a
+memory-pressure threshold or prove a memory-aware policy will help. The
+context and RAM-cache sweeps are intended to test that. Automatic correctness
+was only 31–33/50 judged tasks per run, with writing still unjudged and many
+intermediate output-limit stops, so the speed comparisons are not yet evidence
+of equal task quality.
+
+Other core plots: [median task latency](results/phase1_v2_batch/latency_p50_s.png),
+[generated tokens/s](results/phase1_v2_batch/generated_tokens_per_s.png),
+[server RSS](results/phase1_v2_batch/peak_server_rss_mib.png),
+[completion rate](results/phase1_v2_batch/completion_rate.png),
+[failure rate](results/phase1_v2_batch/failure_rate.png), and
+[context truncations](results/phase1_v2_batch/context_truncations.png).
+
 ### Additional sweeps in progress
 
 At **2026-11-04 21:56 UTC**, the previously suspended launcher resumed on the
 same AWS checkout. It is running 56 additional runs sequentially: tool delay
 (12), arrival rate (12), context length (12), output length (12), and RAM cache
-(8). As of **22:02 UTC**, the first tool-delay run had completed 60/60 tasks
-without failures and the next run had started. After each group, the launcher
-generates CSV summaries and PNG curves under `results/phase1_delay`,
+(8). As of **22:08 UTC**, the first 0-second tool-delay pair had completed
+60/60 tasks under each FIFO without failures; the second repeat was active.
+In that first pair, request FIFO took 364 s and task FIFO 244 s to finish all
+60 tasks. This is a single-repeat observation, not a completed delay curve.
+
+After each group, the launcher generates CSV summaries and PNG curves under
+`results/phase1_delay`,
 `results/phase1_rate`, `results/phase1_context`, `results/phase1_output`, and
 `results/phase1_cache` on the instance. These results remain preliminary until
 all paired runs and report controls are checked and copied to this repository.
