@@ -1,5 +1,8 @@
 # Phase 1 FIFO comparison protocol
 
+The [experiment matrix](phase1_experiment_matrix.md) lists the full launch
+sequence and the five performance curves built from this protocol.
+
 The existing [v1 results](../README.md#results-so-far) are useful development
 measurements. The new controlled comparison uses the fixed, reproducible
 [v2 selection](../results/validation_v2_60/selection.json): 60 tasks, comprising

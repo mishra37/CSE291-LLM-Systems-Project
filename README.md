@@ -329,7 +329,9 @@ For the controlled v2 comparison, generate the fixed 60-task subset with
 `python -m scripts.select_validation`, inspect the matrix with
 `python -m scripts.phase1_fifo --workload workloads/generated/validation_v2_60.jsonl --prefix phase1_v2_batch --dry-run`,
 then execute without `--dry-run`. See the [full protocol](docs/phase1_protocol.md)
-for controls, repeat counts, metric definitions, and reporting commands.
+for controls and metric definitions. The [experiment matrix](docs/phase1_experiment_matrix.md)
+lists the additional context, delay, output-length, arrival-rate, and cache
+sweeps and their reporting commands.
 
 The scripts restart the server before each run, so no run gets another run's
 warm cache. **Stop the EC2 instance when you're done.**

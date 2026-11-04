@@ -45,17 +45,31 @@ def report_run(path):
     tasks = rows(path / "tasks.csv")
     requests = rows(path / "requests.csv")
     quality = jsonl(path / "quality.jsonl")
+    predictions = jsonl(path / "predictions.jsonl")
     memory = rows(path / "memory.csv")
     ids = [t["task_id"] for t in offered]
-    if len(ids) != len(set(ids)) or set(ids) != {t["task_id"] for t in tasks} or set(ids) != {q["task_id"] for q in quality}:
-        raise ValueError(f"Task/quality/offered IDs do not match in {path}")
-    if len(tasks) != len(ids) or len(quality) != len(ids):
-        raise ValueError(f"Duplicate task/quality rows in {path}")
+    if len(ids) != len(set(ids)) or set(ids) != {t["task_id"] for t in tasks} or set(ids) != {p["task_id"] for p in predictions}:
+        raise ValueError(f"Task/prediction/offered IDs do not match in {path}")
+    if len(tasks) != len(ids) or len(predictions) != len(ids):
+        raise ValueError(f"Duplicate task/prediction rows in {path}")
+    if quality:
+        if len(quality) != len(ids) or set(ids) != {q["task_id"] for q in quality}:
+            raise ValueError(f"Task/quality/offered IDs do not match in {path}")
+        quality_scope = "reference"
+    else:
+        task_map = {t["task_id"]: t for t in tasks}
+        quality = [{"task_id": p["task_id"], "completed": p["status"] == "ok"
+                    and p["response_complete"] and not p["truncated"]
+                    and p["steps_done"] == int(task_map[p["task_id"]]["n_steps"])
+                    and bool(p["text"].strip()), "correct": None}
+                   for p in predictions]
+        quality_scope = "not_applicable"
     by_type = defaultdict(list)
     qmap = {q["task_id"]: q for q in quality}
     for task in tasks:
         by_type[task["type"]].append(task)
     base = {"run": path.name, "repeat": deployment["repeat"], "policy": deployment["policy"],
+            "quality_scope": quality_scope,
             "k": deployment["k"], "np": deployment["np"], "ctx": deployment["ctx"],
             "cache_ram_mib": deployment["cache_ram_mib"], "arrival": deployment["arrival"],
             "rate": deployment.get("rate"), "tool_delay_override_s": deployment.get("tool_delay_override_s"),
@@ -91,13 +105,26 @@ def report_run(path):
                   "first_gpu_mib": float(memory[0]["gpu_mem_mb"]) if memory and memory[0].get("gpu_mem_mb") else None,
                   "first_server_rss_mib": float(memory[0]["server_rss_mb"]) if memory and memory[0].get("server_rss_mb") else None,
                   "request_queue_p95_s": percentile([r["queue_s"] for r in requests], 95),
+                  "request_latency_p95_s": percentile([r["latency_s"] for r in requests if r["status"] == "ok"], 95),
+                  "ttft_p95_s": percentile([r["ttft_s"] for r in requests if r["status"] == "ok" and r.get("ttft_s")], 95),
                   "model_request_failures": sum(r["status"] != "ok" for r in requests),
+                  "request_generated_tokens_p50": percentile([r["gen_tokens"] for r in requests if r["status"] == "ok" and r.get("gen_tokens")], 50),
+                  "request_generated_tokens_p95": percentile([r["gen_tokens"] for r in requests if r["status"] == "ok" and r.get("gen_tokens")], 95),
+                  "forced_short_outputs": sum(r["status"] == "ok" and str(r.get("ignore_eos", "")).lower() == "true"
+                                              and r.get("gen_tokens") and float(r["gen_tokens"]) < float(r["max_tokens"])
+                                              for r in requests),
                   "output_limit_intermediate": sum(r.get("stop_type") == "limit" and int(r["step"]) < int(r["n_steps"]) - 1 for r in requests),
                   "output_limit_final": sum(r.get("stop_type") == "limit" and int(r["step"]) == int(r["n_steps"]) - 1 for r in requests),
                   "context_truncations": sum(str(r.get("truncated", "")).lower() == "true" for r in requests),
                   "prompt_tokens_computed": sum(int(float(r["prompt_tokens"] or 0)) for r in requests),
-                  "prompt_tokens_cached": sum(int(float(r["cached_tokens"] or 0)) for r in requests)})
+                  "prompt_tokens_cached": sum(int(float(r["cached_tokens"] or 0)) for r in requests),
+                  "generated_tokens_per_s": round(whole["generated_tokens"] / makespan, 4)})
     type_rows = [{**base, "type": kind, **metrics(group)} for kind, group in sorted(by_type.items())]
+    type_map = {row["type"]: row for row in type_rows}
+    short_queue = type_map.get("short_qa", {}).get("queue_p95_s")
+    for kind in ("multistep", "long_context"):
+        other = type_map.get(kind, {}).get("queue_p95_s")
+        whole[f"{kind}_to_short_queue_p95_ratio"] = round(other / short_queue, 3) if other is not None and short_queue else None
     return {**base, **whole}, type_rows
 
 
@@ -128,7 +155,7 @@ def main():
         run, types = report_run(path)
         run_rows.append(run)
         type_rows.extend(types)
-    for field in ("workload_sha256", "model_sha256", "llama_commit", "source_commit", "np", "ctx", "cache_ram_mib", "arrival", "rate", "tool_delay_override_s"):
+    for field in ("workload_sha256", "model_sha256", "llama_commit", "source_commit", "np", "ctx", "cache_ram_mib", "arrival", "rate", "tool_delay_override_s", "quality_scope"):
         if len({r[field] for r in run_rows}) != 1:
             raise ValueError(f"Inconsistent {field} across comparison runs")
     pairs = defaultdict(set)
@@ -147,11 +174,13 @@ def main():
         groups[(row["policy"], row["k"])].append(row)
     repetitions = []
     for (policy, k), group in sorted(groups.items()):
-        repetitions.append({"policy": policy, "k": k, "repeats": len(group),
-                            **{f"{metric}_median": round(statistics.median(r[metric] for r in group), 4)
-                               for metric in ("throughput_completed_tasks_s", "latency_p50_s", "latency_p95_s",
-                                              "queue_p95_s", "peak_gpu_mib", "peak_server_rss_mib",
-                                              "completion_rate", "correct", "correct_rate_judged")}})
+        aggregate = {"policy": policy, "k": k, "repeats": len(group)}
+        for metric in ("throughput_completed_tasks_s", "latency_p50_s", "latency_p95_s",
+                       "queue_p95_s", "peak_gpu_mib", "peak_server_rss_mib",
+                       "completion_rate", "correct", "correct_rate_judged"):
+            values = [r[metric] for r in group if r[metric] is not None]
+            aggregate[f"{metric}_median"] = round(statistics.median(values), 4) if values else None
+        repetitions.append(aggregate)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     write_csv(out / "runs.csv", run_rows)

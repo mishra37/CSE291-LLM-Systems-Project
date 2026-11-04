@@ -51,6 +51,8 @@ class Phase1ControlsTests(unittest.TestCase):
                 "workload_sha256": "w", "model_sha256": "m", "llama_commit": "c"}))
             (path / "summary.json").write_text(json.dumps({"makespan_s": 10}))
             for name, data in (("offered_tasks.jsonl", [{"task_id": "a"}, {"task_id": "b"}]),
+                               ("predictions.jsonl", [{"task_id": "a", "status": "ok", "response_complete": True, "truncated": False, "steps_done": 1, "text": "story"},
+                                                      {"task_id": "b", "status": "timeout", "response_complete": False, "truncated": False, "steps_done": 0, "text": ""}]),
                                ("quality.jsonl", [{"task_id": "a", "correct": None, "completed": True, "length_ok": True},
                                                  {"task_id": "b", "correct": False, "completed": False}])):
                 (path / name).write_text("".join(json.dumps(row) + "\n" for row in data))
@@ -59,12 +61,12 @@ class Phase1ControlsTests(unittest.TestCase):
                     writer = csv.DictWriter(sink, fields)
                     writer.writeheader()
                     writer.writerows(data)
-            write_csv("tasks.csv", ["task_id", "type", "status", "latency_s", "queue_s", "admit_wait_s", "gen_tokens"],
-                      [{"task_id": "a", "type": "long_gen", "status": "ok", "latency_s": 8, "queue_s": 2, "admit_wait_s": 1, "gen_tokens": 100},
-                       {"task_id": "b", "type": "short_qa", "status": "timeout", "latency_s": 9, "queue_s": 7, "admit_wait_s": 3, "gen_tokens": 0}])
-            write_csv("requests.csv", ["status", "queue_s", "step", "n_steps", "stop_type", "truncated", "prompt_tokens", "cached_tokens"],
-                      [{"status": "ok", "queue_s": 2, "step": 0, "n_steps": 1, "stop_type": "limit", "truncated": "False", "prompt_tokens": 50, "cached_tokens": 0},
-                       {"status": "timeout", "queue_s": 7, "step": 0, "n_steps": 1, "stop_type": "", "truncated": "False", "prompt_tokens": "", "cached_tokens": ""}])
+            write_csv("tasks.csv", ["task_id", "type", "status", "n_steps", "latency_s", "queue_s", "admit_wait_s", "gen_tokens"],
+                      [{"task_id": "a", "type": "long_gen", "status": "ok", "n_steps": 1, "latency_s": 8, "queue_s": 2, "admit_wait_s": 1, "gen_tokens": 100},
+                       {"task_id": "b", "type": "short_qa", "status": "timeout", "n_steps": 1, "latency_s": 9, "queue_s": 7, "admit_wait_s": 3, "gen_tokens": 0}])
+            write_csv("requests.csv", ["status", "queue_s", "latency_s", "ttft_s", "step", "n_steps", "stop_type", "truncated", "prompt_tokens", "cached_tokens"],
+                      [{"status": "ok", "queue_s": 2, "latency_s": 6, "ttft_s": 1, "step": 0, "n_steps": 1, "stop_type": "limit", "truncated": "False", "prompt_tokens": 50, "cached_tokens": 0},
+                       {"status": "timeout", "queue_s": 7, "latency_s": 9, "ttft_s": "", "step": 0, "n_steps": 1, "stop_type": "", "truncated": "False", "prompt_tokens": "", "cached_tokens": ""}])
             write_csv("memory.csv", ["gpu_mem_mb", "server_rss_mb"], [{"gpu_mem_mb": 1000, "server_rss_mb": 500}])
             run, by_type = report_run(path)
             self.assertEqual((run["offered"], run["completed"], run["failed_or_incomplete"]), (2, 1, 1))
@@ -72,6 +74,11 @@ class Phase1ControlsTests(unittest.TestCase):
             self.assertEqual(run["model_request_failures"], 1)
             self.assertEqual(run["output_limit_final"], 1)
             self.assertEqual(len(by_type), 2)
+
+            (path / "quality.jsonl").write_text("")
+            synthetic, _ = report_run(path)
+            self.assertEqual(synthetic["quality_scope"], "not_applicable")
+            self.assertEqual((synthetic["completed"], synthetic["judged"], synthetic["unjudged"]), (1, 0, 2))
 
 
 if __name__ == "__main__":
