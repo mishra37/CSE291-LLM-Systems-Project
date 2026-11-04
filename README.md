@@ -31,6 +31,30 @@ memory, so that more tasks finish without running out of memory?
   - the Phase 1 report and the Phase 2 scheduler
   - repeated controlled v2 comparisons using the new protocol
 
+## Controlled v2 run in progress (snapshot: 2026-11-04 17:51 UTC)
+
+The AWS g6.xlarge checkout at source commit `ef0473f` is running the
+[Phase 1 experiment matrix](docs/phase1_experiment_matrix.md). The paired
+preflight completed **60/60 tasks under each FIFO with no failures**. In the
+18-run core matrix, **1/18** run directories has a completed summary
+(`r1`, `K=1`, request FIFO); the corresponding task-FIFO run is active. These
+are preliminary run-status facts, not final comparative results.
+
+Because the team account has a **$20 daily AWS limit**, the outer launch shell
+is suspended while its core-matrix Python process continues. The additional
+56 arrival, delay, context, output-length, and cache runs will **not** start
+after the core until billing is reviewed and the launcher is resumed. The EC2
+instance continues billing while it is running, including if the launcher is
+suspended. Stop the instance after data collection when no team member needs it.
+
+Live logs and raw data are on the instance at
+`/home/ec2-user/phase1-launch.log` and
+`/home/ec2-user/phase1-project/results/raw/`. They have not yet been copied
+into this repository. After the core finishes, run
+`python -m analysis.phase1_report --prefix phase1_v2_batch --out results/phase1_v2_batch`
+and `python -m analysis.phase1_core_plots --report results/phase1_v2_batch`
+from the instance checkout, then copy and commit the raw and summary results.
+
 Setup: AWS g6.xlarge (one NVIDIA L4, 24 GB), llama.cpp `llama-server` built with
 CUDA, model Qwen2.5-7B-Instruct (4-bit, Q4_K_M). Setup steps are in
 [setup/README.md](setup/README.md).
