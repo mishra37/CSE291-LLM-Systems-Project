@@ -1,11 +1,11 @@
 {
   "dataset_version": "v2",
   "selection": "60 of 80: all long QA and writing; 10 short QA; 30 balanced multistep",
-  "source_file_sha256": {
-    "short_qa.jsonl": "fe937e89e5d1f581a22e4c2f5c744ecd5eee5ff8bd078faad2cd835708f09459",
-    "long_context.jsonl": "36186fa918ec24ef94313249f5c86696a9493b637d6e3958dad7e8337c7ca486",
-    "long_generation.jsonl": "1ccaf72909b19aac647023cba6334bf9183c2f26e7dde565022f8cd95b1e33c4",
-    "multistep.jsonl": "8df2fe07d93f2868e815fc3b5fca03ea22571769add6b31fcd36402c54317ddf"
+  "source_file_sha256_lf": {
+    "short_qa.jsonl": "b6022d3b75fce7021029b6b0f0c38a2397e7187c5f0c4363882202a1587fb78a",
+    "long_context.jsonl": "3e2622592b9c749afc51f0f47bb8edc62f44a1f18154840d6f3234abaff5f3d5",
+    "long_generation.jsonl": "beeb8a680b51679f61e6b60fb0135728ff2737c0cc16d40a346a51dfc8212489",
+    "multistep.jsonl": "f61d17687c9dc96d57a82ebe23b5c9cf8aed25e8d2fb4de9871e2fa9255b5c0c"
   },
   "indices_zero_based": {
     "short_qa": [

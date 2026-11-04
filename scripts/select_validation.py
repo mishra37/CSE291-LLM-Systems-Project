@@ -23,7 +23,7 @@ def select(source):
     for name in ("short_qa", "long_context", "long_generation", "multistep"):
         path = source / (name + ".jsonl")
         raw = path.read_bytes()
-        hashes[path.name] = hashlib.sha256(raw).hexdigest()
+        hashes[path.name] = hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
         data[name] = [json.loads(line) for line in raw.splitlines() if line.strip()]
     groups = {name: data[name] for name in ("short_qa", "long_context", "long_generation")}
     for subtype in ("sales_analysis", "log_investigation", "document_lookup", "inventory_check"):
@@ -35,7 +35,7 @@ def select(source):
         raise ValueError("Expected v2 tasks only")
     raw = "".join(json.dumps(task, ensure_ascii=False, separators=(",", ":")) + "\n" for task in chosen).encode("utf-8")
     manifest = {"dataset_version": "v2", "selection": "60 of 80: all long QA and writing; 10 short QA; 30 balanced multistep",
-                "source_file_sha256": hashes, "indices_zero_based": POSITIONS,
+                "source_file_sha256_lf": hashes, "indices_zero_based": POSITIONS,
                 "task_ids": [task["task_id"] for task in chosen], "sha256_jsonl": hashlib.sha256(raw).hexdigest(),
                 "counts_by_type": dict(Counter(t["type"] for t in chosen)),
                 "counts_by_subtype": dict(Counter(t.get("subtype", "") for t in chosen if t["type"] == "multistep")),

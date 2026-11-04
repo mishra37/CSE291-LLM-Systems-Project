@@ -8,7 +8,9 @@ all 10 long-context QA, all 10 writing tasks, and 30 multistep tasks (8 sales,
 182 planned model calls, and 122 planned tools. All selected task records match
 the raw run's offered manifest in the same order. The selection checksum is for
 the compact JSONL serialization; `offered_tasks.jsonl` uses spaced JSON and has
-different bytes despite identical records.
+different bytes despite identical records. Source-file checksums in the
+selection manifest normalize CRLF to LF, matching the repository's stored task
+files on Windows and Linux.
 
 Run: AWS g6.xlarge/NVIDIA L4, Qwen2.5-7B-Instruct Q4_K_M, llama.cpp commit
 `785322d17f2d51e5185cf996a1f4e46d87640841`, model SHA-256 in the saved
