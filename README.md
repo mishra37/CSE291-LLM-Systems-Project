@@ -27,12 +27,14 @@ memory, so that more tasks finish without running out of memory?
     server for each run, fixed `NP` during a `K` sweep, and per-type reporting
   - the [18-run controlled v2 core matrix](results/phase1_v2_batch/) with raw
     request, task, quality, and memory measurements
+  - a [Phase 1 report draft](docs/phase1_report.tex) with the controlled result
+    table, figures, limitations, and milestone appendix
   - an [audit of the earlier v1 sweeps](docs/v1_sweep_audit.md), including
     scorer checks and limits on what their plots establish
 - **Not done yet:**
   - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
   - repeat runs of the older v1 sweeps (each v1 config ran once)
-  - the remaining controlled v2 sweeps, a narrative Phase 1 report, and the
+  - the remaining controlled v2 sweeps, a finalized Phase 1 report, and the
     Phase 2 scheduler
 
 ## Controlled v2 core results (snapshot: 2026-11-04 21:44 UTC)
