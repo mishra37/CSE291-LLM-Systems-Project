@@ -33,14 +33,25 @@ memory, so that more tasks finish without running out of memory?
   - the Phase 1 report and the Phase 2 scheduler
   - repeated controlled v2 comparisons using the new protocol
 
-## Controlled v2 run in progress (snapshot: 2026-11-04 17:51 UTC)
+## Controlled v2 run in progress (snapshot: 2026-11-04 18:08 UTC)
 
 The AWS g6.xlarge checkout at source commit `ef0473f` is running the
 [Phase 1 experiment matrix](docs/phase1_experiment_matrix.md). The paired
 preflight completed **60/60 tasks under each FIFO with no failures**. In the
-18-run core matrix, **1/18** run directories has a completed summary
-(`r1`, `K=1`, request FIFO); the corresponding task-FIFO run is active. These
-are preliminary run-status facts, not final comparative results.
+18-run core matrix, **3/18** run directories have completed summaries. The
+fourth run (`r1`, `K=2`, task FIFO) is active; llama-server is healthy. These
+are preliminary single-repeat results, not final comparative estimates.
+
+| Completed run | Tasks | Makespan | Task p50 / p95 | Peak GPU memory | Automatic correctness |
+|---|---:|---:|---:|---:|---:|
+| `r1`, K=1, request FIFO | 60/60 | 444 s | 187 / 439 s | 5,921 MiB | 33/50; 10 writing tasks pending judgment |
+| `r1`, K=1, task FIFO | 60/60 | 657 s | 130 / 588 s | 5,917 MiB | 31/50; 10 writing tasks pending judgment |
+| `r1`, K=2, request FIFO | 60/60 | 387 s | 146 / 384 s | 5,923 MiB | 33/50; 10 writing tasks pending judgment |
+
+These runs recorded zero task failures and zero short outputs. The K=1 pair
+suggests a makespan advantage for request FIFO in this workload, while task
+FIFO had a lower median and a higher p95; repeats and the remaining K settings
+are needed before drawing a policy conclusion.
 
 Because the team account has a **$20 daily AWS limit**, the outer launch shell
 is suspended while its core-matrix Python process continues. The additional
