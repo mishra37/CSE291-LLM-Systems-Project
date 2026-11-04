@@ -1,0 +1,7 @@
+policy,k,repeats,throughput_completed_tasks_s_median,latency_p50_s_median,latency_p95_s_median,queue_p95_s_median,peak_gpu_mib_median,peak_server_rss_mib_median,completion_rate_median,correct_median,correct_rate_judged_median
+fifo_request,1,3,0.1352,187.285,439.2512,406.2058,5920.9,867.6,1.0,33,0.66
+fifo_request,2,3,0.155,145.4939,383.7345,331.3809,5922.9,873.0,1.0,33,0.66
+fifo_request,4,3,0.3238,72.7899,184.2008,133.2029,5924.9,874.2,1.0,31,0.62
+fifo_task,1,3,0.0913,130.2967,588.6117,570.0374,5916.9,851.8,1.0,31,0.62
+fifo_task,2,3,0.1656,79.0997,321.0838,301.4963,5916.9,860.4,1.0,32,0.64
+fifo_task,4,3,0.2552,54.4015,209.7618,184.6009,5916.9,864.8,1.0,31,0.62

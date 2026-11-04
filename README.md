@@ -25,48 +25,56 @@ memory, so that more tasks finish without running out of memory?
     with 60/60 workflows completed; its strict multistep accuracy was 13/30
   - a repeatable [Phase 1 FIFO protocol](docs/phase1_protocol.md) with a fresh
     server for each run, fixed `NP` during a `K` sweep, and per-type reporting
+  - the [18-run controlled v2 core matrix](results/phase1_v2_batch/) with raw
+    request, task, quality, and memory measurements
   - an [audit of the earlier v1 sweeps](docs/v1_sweep_audit.md), including
     scorer checks and limits on what their plots establish
 - **Not done yet:**
   - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
   - repeat runs of the sweeps (each sweep config ran once)
-  - the Phase 1 report and the Phase 2 scheduler
-  - repeated controlled v2 comparisons using the new protocol
+  - the remaining controlled v2 sweeps, a narrative Phase 1 report, and the
+    Phase 2 scheduler
 
-## Controlled v2 run in progress (snapshot: 2026-11-04 18:08 UTC)
+## Controlled v2 core results (snapshot: 2026-11-04 21:44 UTC)
 
-The AWS g6.xlarge checkout at source commit `ef0473f` is running the
+The AWS g6.xlarge checkout at source commit `ef0473f` ran the
 [Phase 1 experiment matrix](docs/phase1_experiment_matrix.md). The paired
-preflight completed **60/60 tasks under each FIFO with no failures**. In the
-18-run core matrix, **3/18** run directories have completed summaries. The
-fourth run (`r1`, `K=2`, task FIFO) is active; llama-server is healthy. These
-are preliminary single-repeat results, not final comparative estimates.
+preflight completed **60/60 tasks under each FIFO with no failures**. The
+**18/18 core runs** are now complete: three repeats of each FIFO at K=1, 2,
+and 4, always with `NP=4`, `CTX=16384`, no RAM cache, and the same 60-task
+batch. All **1,080 task executions** completed with no task failures or context
+truncations. The report verified matching offered-task, prediction, and task
+IDs in each run and matching workload, model, and runtime hashes across runs.
 
-| Completed run | Tasks | Makespan | Task p50 / p95 | Peak GPU memory | Automatic correctness |
+| Scheduler | K | Median completed tasks/s | Median task p50 / p95 | Median peak GPU memory | Median automatic correctness |
 |---|---:|---:|---:|---:|---:|
-| `r1`, K=1, request FIFO | 60/60 | 444 s | 187 / 439 s | 5,921 MiB | 33/50; 10 writing tasks pending judgment |
-| `r1`, K=1, task FIFO | 60/60 | 657 s | 130 / 588 s | 5,917 MiB | 31/50; 10 writing tasks pending judgment |
-| `r1`, K=2, request FIFO | 60/60 | 387 s | 146 / 384 s | 5,923 MiB | 33/50; 10 writing tasks pending judgment |
+| Request FIFO | 1 | 0.135 | 187 / 439 s | 5,921 MiB | 33/50 |
+| Task FIFO | 1 | 0.091 | 130 / 589 s | 5,917 MiB | 31/50 |
+| Request FIFO | 2 | 0.155 | 145 / 384 s | 5,923 MiB | 33/50 |
+| Task FIFO | 2 | 0.166 | 79 / 321 s | 5,917 MiB | 32/50 |
+| Request FIFO | 4 | 0.324 | 73 / 184 s | 5,925 MiB | 31/50 |
+| Task FIFO | 4 | 0.255 | 54 / 210 s | 5,917 MiB | 31/50 |
 
-These runs recorded zero task failures and zero short outputs. The K=1 pair
-suggests a makespan advantage for request FIFO in this workload, while task
-FIFO had a lower median and a higher p95; repeats and the remaining K settings
-are needed before drawing a policy conclusion.
+These are medians across three runs per setting. Request FIFO led on
+throughput at K=1 and K=4; task FIFO led slightly at K=2. Task FIFO had a
+lower median task latency at every K, while its p95 was worse at K=1 and K=4.
+The 50 judged tasks are 20 QA plus 30 multistep; 10 writing tasks per run still
+need human or semantic judgment. About 66–82 intermediate agent calls per run
+hit their output limit, and generated-token totals varied across settings, so
+the low exact-answer scores and output lengths need attention before claiming
+a quality-neutral speedup. See the [raw runs](results/raw/) and
+[core CSVs and curves](results/phase1_v2_batch/).
 
 Because the team account has a **$20 daily AWS limit**, the outer launch shell
-is suspended while its core-matrix Python process continues. The additional
-56 arrival, delay, context, output-length, and cache runs will **not** start
-after the core until billing is reviewed and the launcher is resumed. The EC2
-instance continues billing while it is running, including if the launcher is
-suspended. Stop the instance after data collection when no team member needs it.
+remains suspended. The additional 56 arrival, delay, context, output-length,
+and cache runs have **not** started. The core process has finished, but the EC2
+instance and llama-server were still running at this snapshot and continue to
+bill until the instance is stopped.
 
-Live logs and raw data are on the instance at
-`/home/ec2-user/phase1-launch.log` and
-`/home/ec2-user/phase1-project/results/raw/`. They have not yet been copied
-into this repository. After the core finishes, run
+The raw data and generated report are now in this repository. The instance log
+remains at `/home/ec2-user/phase1-launch.log`. To regenerate the report, run
 `python -m analysis.phase1_report --prefix phase1_v2_batch --out results/phase1_v2_batch`
-and `python -m analysis.phase1_core_plots --report results/phase1_v2_batch`
-from the instance checkout, then copy and commit the raw and summary results.
+and `python -m analysis.phase1_core_plots --report results/phase1_v2_batch`.
 
 Setup: AWS g6.xlarge (one NVIDIA L4, 24 GB), llama.cpp `llama-server` built with
 CUDA, model Qwen2.5-7B-Instruct (4-bit, Q4_K_M). Setup steps are in
