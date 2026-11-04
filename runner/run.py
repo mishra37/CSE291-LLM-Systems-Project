@@ -100,8 +100,10 @@ async def run_task(task, sched, clock, req_rows, task_rows, predictions=None, re
                 if tool or step["tool_delay_s"] > 0:
                     tool_s += clock() - t_tool
             messages.append(("user", user))
+            generation = {k: step.get(k, task.get("generation", {}).get(k, default))
+                          for k, default in (("ignore_eos", True), ("temperature", 0.0))}
             req = {"prompt": chatml(task["system"], messages), "max_tokens": step["max_tokens"],
-                   "generation": {k: v for k, v in task.get("generation", {}).items() if k in ("ignore_eos", "temperature")}}
+                   "generation": generation}
             res = await sched.request(req, ticket)
             task_responses.append(res)
             responses.append({"task_id": task["task_id"], "step": i, "prompt": req["prompt"],
@@ -119,7 +121,7 @@ async def run_task(task, sched, clock, req_rows, task_rows, predictions=None, re
                 "latency_s": round(res["t_done"] - req["t_enqueue"], 4),
                 "prompt_tokens": timings.get("prompt_n"),   # prompt tokens actually computed
                 "cached_tokens": timings.get("cache_n"),    # prompt tokens reused from KV cache
-                "gen_tokens": gen, "max_tokens": step["max_tokens"],
+                "gen_tokens": gen, "max_tokens": step["max_tokens"], "ignore_eos": generation["ignore_eos"],
                 "prefill_ms": timings.get("prompt_ms"), "decode_ms": timings.get("predicted_ms"),
                 "slot": final.get("id_slot"), "truncated": final.get("truncated"),
                 "stop_type": final.get("stop_type"),
@@ -182,7 +184,7 @@ def summarize(req_rows, task_rows, mem_rows, makespan):
         "throughput_tasks_per_s": round(len(ok) / makespan, 4) if makespan else None,
         "throughput_gen_tok_per_s": round(sum(r["gen_tokens"] or 0 for r in ok_req) / makespan, 2) if makespan else None,
         "prefix_cache_hit_ratio": round(cached / max(1, prompt + cached), 4),
-        "short_outputs": sum((r["gen_tokens"] or 0) < r["max_tokens"] for r in ok_req),
+        "short_outputs": sum((r["gen_tokens"] or 0) < r["max_tokens"] for r in ok_req if r["ignore_eos"]),
         "peak_gpu_mem_mb": max((m["gpu_mem_mb"] for m in mem_rows), default=None),
         "peak_server_rss_mb": max((m["server_rss_mb"] or 0 for m in mem_rows), default=None),
         "by_type": by_type,
@@ -256,6 +258,16 @@ async def main(args):
     }
     write_jsonl(out / "predictions.jsonl", predictions)
     write_jsonl(out / "responses.jsonl", responses)
+    responses_by_task = {}
+    for response in responses:
+        responses_by_task.setdefault(response["task_id"], []).append(response)
+    write_jsonl(out / "outputs.jsonl", [
+        {"task_id": p["task_id"], "type": next(t["type"] for t in tasks if t["task_id"] == p["task_id"]),
+         "status": p["status"], "steps_done": p["steps_done"],
+         "response_complete": p["response_complete"], "truncated": p["truncated"],
+         "stop_type": responses_by_task[p["task_id"]][-1]["final"].get("stop_type") if responses_by_task.get(p["task_id"]) else None,
+         "text": p["text"], "step_texts": [r["text"] for r in responses_by_task.get(p["task_id"], [])]}
+        for p in predictions])
     write_jsonl(out / "tools.jsonl", tool_rows)
     quality = evaluate(records, predictions)
     write_jsonl(out / "quality.jsonl", quality)

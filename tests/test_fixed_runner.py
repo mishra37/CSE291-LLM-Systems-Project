@@ -102,6 +102,27 @@ class FixedRunnerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual([p['n_predict'] for p in self.payloads], [128, 128, 128, 128, 256])
             self.assertTrue(all(p['ignore_eos'] is False for p in self.payloads))
 
+    async def test_exported_v1_keeps_natural_eos_and_legacy_outputs(self):
+        from workloads.export_v1 import load_tasks as load_v1, model_steps
+        original = load_v1(ROOT / 'workloads/tasks/v1', ['short_qa'])[0]
+        record = {'task_id': original['task_id'], 'type': original['type'],
+                  'system': original['system'], 'arrival_s': 0, 'prefix_group': 'fixed',
+                  'steps': model_steps(original, None), 'est_peak_context': 256}
+        with tempfile.TemporaryDirectory() as directory:
+            workload = Path(directory) / 'exported.jsonl'
+            workload.write_text(json.dumps(record) + '\n')
+            args = argparse.Namespace(workload=str(workload), arrival='batch', rate=1.,
+                tool_delay=None, max_tasks=None, k=1, sample_ms=100, out_dir=directory,
+                name='v1', url=self.url, req_timeout=10, sched='fifo_request',
+                no_warmup=True, server_args='mock server')
+            with patch('runner.run.MemorySampler') as sampler, contextlib.redirect_stdout(io.StringIO()):
+                sampler.return_value.rows = []
+                await main(args)
+            self.assertFalse(self.payloads[0]['ignore_eos'])
+            out = Path(directory) / 'v1'
+            self.assertEqual(len((out / 'outputs.jsonl').read_text().splitlines()), 1)
+            self.assertIn('ignore_eos', (out / 'requests.csv').read_text().splitlines()[0])
+
     def test_adapter_and_strict_json_types(self):
         tasks, records = load_tasks(ROOT / 'workloads/tasks/v1', arrival='steady', rate=2, tool_delay=0)
         self.assertEqual(tasks[1]['arrival_s'], .5)

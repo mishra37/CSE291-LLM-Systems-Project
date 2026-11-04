@@ -21,10 +21,15 @@ memory, so that more tasks finish without running out of memory?
   - memory experiments: CPU RAM cache, SSD save/restore, 8-bit KV, shared KV pool
   - plots ([results/plots/](results/plots/)) and a one-row-per-run summary
     ([results/runs_summary.csv](results/runs_summary.csv))
+  - a revised v2 task collection and a [60-task Qwen validation](results/validation_v2_60/README.md)
+    with 60/60 workflows completed; its strict multistep accuracy was 13/30
+  - a repeatable [Phase 1 FIFO protocol](docs/phase1_protocol.md) with a fresh
+    server for each run, fixed `NP` during a `K` sweep, and per-type reporting
 - **Not done yet:**
   - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
   - repeat runs of the sweeps (each sweep config ran once)
   - the Phase 1 report and the Phase 2 scheduler
+  - repeated controlled v2 comparisons using the new protocol
 
 Setup: AWS g6.xlarge (one NVIDIA L4, 24 GB), llama.cpp `llama-server` built with
 CUDA, model Qwen2.5-7B-Instruct (4-bit, Q4_K_M). Setup steps are in
@@ -76,6 +81,9 @@ These are real tasks with known correct answers, so we can check that a faster
 setup isn't producing worse answers. Files are in
 [workloads/tasks/v1/](workloads/tasks/v1/), and details are in
 [workloads/README.md](workloads/README.md).
+The v1 results below use this original collection. The revised
+[v2 collection](workloads/tasks/v2/README.md) clarifies answer formats and
+output allowances and should be named separately in future comparisons.
 
 | Type | Tasks | What it is | What it stresses |
 |---|---:|---|---|
@@ -317,6 +325,12 @@ python -m analysis.summarize      # results/runs_summary.csv
 python -m analysis.plots          # results/plots/*.png
 ```
 
+For the controlled v2 comparison, generate the fixed 60-task subset with
+`python -m scripts.select_validation`, inspect the matrix with
+`python -m scripts.phase1_fifo --workload workloads/generated/validation_v2_60.jsonl --prefix phase1_v2_batch --dry-run`,
+then execute without `--dry-run`. See the [full protocol](docs/phase1_protocol.md)
+for controls, repeat counts, metric definitions, and reporting commands.
+
 The scripts restart the server before each run, so no run gets another run's
 warm cache. **Stop the EC2 instance when you're done.**
 
@@ -341,6 +355,7 @@ Each run writes a folder in [results/raw/](results/raw/):
 | `outputs.jsonl`, `predictions.jsonl` | the model's actual answers |
 | `quality/` | scores (from `python -m evaluation.score_run --run results/raw/<name>`) |
 | `config.json` | exact settings used for the run |
+| `deployment.json` | model/runtime/workload checksums and cache procedure for controlled v2 runs |
 
 ## Repository map
 
@@ -348,6 +363,7 @@ Each run writes a folder in [results/raw/](results/raw/):
 |---|---|
 | [setup/](setup/) | build llama.cpp, download model, start server, smoke test |
 | [workloads/tasks/v1/](workloads/tasks/v1/) | the 80 real tasks and their answers |
+| [workloads/tasks/v2/](workloads/tasks/v2/) | revised executable definitions and references |
 | [workloads/](workloads/) | task builders and validators, synthetic generator, `export_v1.py` (converts the 80 tasks for the runner) |
 | [scheduler/fifo.py](scheduler/fifo.py) | the two FIFO schedulers |
 | [runner/](runner/) | sends tasks to llama.cpp and records everything |
