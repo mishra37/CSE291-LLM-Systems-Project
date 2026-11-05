@@ -1,0 +1,27 @@
+{
+  "args": {
+    "workload": "workloads/generated/phase1_context_500.jsonl",
+    "arrival": "batch",
+    "rate": 1.0,
+    "tool_delay": null,
+    "name": "phase1_context_500_r1_k2_fifo_task",
+    "sched": "fifo_task",
+    "k": 2,
+    "url": "http://127.0.0.1:8080",
+    "server_args": "-c 16384 -np 4 --cache-ram 0",
+    "req_timeout": 300,
+    "max_tasks": null,
+    "sample_ms": 100,
+    "no_warmup": false,
+    "out_dir": "results/raw"
+  },
+  "host": "ip-172-31-44-154.us-west-2.compute.internal",
+  "git_commit": "ef0473f7debab4adcbeda1435e506128ca85705e",
+  "started": "2026-11-05T00:41:28",
+  "server": {
+    "total_slots": 4,
+    "model_path": "/home/ec2-user/llmsys/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "n_ctx": 4096
+  },
+  "workload_meta": null
+}

@@ -1,0 +1,61 @@
+{
+  "tasks": 60,
+  "completed": 60,
+  "failed": {},
+  "failure_rate": 0.0,
+  "task_latency_s": {
+    "p50": 75.75,
+    "p95": 222.043,
+    "p99": 238.389
+  },
+  "request_queue_s": {
+    "p50": 0.0,
+    "p95": 0.0
+  },
+  "ttft_s": {
+    "p50": 0.105,
+    "p95": 0.589
+  },
+  "makespan_s": 244.82,
+  "throughput_tasks_per_s": 0.2451,
+  "throughput_gen_tok_per_s": 86.68,
+  "prefix_cache_hit_ratio": 0.6656,
+  "short_outputs": 0,
+  "peak_gpu_mem_mb": 5916.9,
+  "peak_server_rss_mb": 860.7,
+  "by_type": {
+    "long_context": {
+      "n": 10,
+      "completed": 10,
+      "p50_s": 7.053,
+      "p95_s": 10.514,
+      "queue_p50_s": 5.035
+    },
+    "long_gen": {
+      "n": 10,
+      "completed": 10,
+      "p50_s": 48.743,
+      "p95_s": 72.241,
+      "queue_p50_s": 34.879
+    },
+    "multistep": {
+      "n": 30,
+      "completed": 30,
+      "p50_s": 164.289,
+      "p95_s": 230.122,
+      "queue_p50_s": 148.811
+    },
+    "short_qa": {
+      "n": 10,
+      "completed": 10,
+      "p50_s": 0.65,
+      "p95_s": 1.43,
+      "queue_p50_s": 0.406
+    }
+  },
+  "quality": {
+    "offered": 60,
+    "correct": 31,
+    "pending_judgment": 10
+  }
+}

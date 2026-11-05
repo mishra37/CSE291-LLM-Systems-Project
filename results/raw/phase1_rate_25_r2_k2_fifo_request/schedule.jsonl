@@ -1,0 +1,60 @@
+{"task_id": "short_qa-v2-001", "arrival_s": 0.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-002", "arrival_s": 4.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-003", "arrival_s": 8.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-004", "arrival_s": 12.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-005", "arrival_s": 16.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-006", "arrival_s": 20.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-007", "arrival_s": 24.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-008", "arrival_s": 28.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-009", "arrival_s": 32.0, "tool_delays_s": [0]}
+{"task_id": "short_qa-v2-010", "arrival_s": 36.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-001", "arrival_s": 40.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-002", "arrival_s": 44.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-003", "arrival_s": 48.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-004", "arrival_s": 52.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-005", "arrival_s": 56.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-006", "arrival_s": 60.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-007", "arrival_s": 64.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-008", "arrival_s": 68.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-009", "arrival_s": 72.0, "tool_delays_s": [0]}
+{"task_id": "long_context-v2-010", "arrival_s": 76.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-001", "arrival_s": 80.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-002", "arrival_s": 84.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-003", "arrival_s": 88.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-004", "arrival_s": 92.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-005", "arrival_s": 96.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-006", "arrival_s": 100.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-007", "arrival_s": 104.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-008", "arrival_s": 108.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-009", "arrival_s": 112.0, "tool_delays_s": [0]}
+{"task_id": "long_gen-v2-010", "arrival_s": 116.0, "tool_delays_s": [0]}
+{"task_id": "multistep-sales-v2-001", "arrival_s": 120.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-003", "arrival_s": 124.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-004", "arrival_s": 128.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-005", "arrival_s": 132.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-007", "arrival_s": 136.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-008", "arrival_s": 140.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-009", "arrival_s": 144.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-sales-v2-010", "arrival_s": 148.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-001", "arrival_s": 152.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-002", "arrival_s": 156.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-003", "arrival_s": 160.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-004", "arrival_s": 164.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-006", "arrival_s": 168.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-008", "arrival_s": 172.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-009", "arrival_s": 176.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-logs-v2-010", "arrival_s": 180.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-001", "arrival_s": 184.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-002", "arrival_s": 188.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-003", "arrival_s": 192.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-005", "arrival_s": 196.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-006", "arrival_s": 200.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-007", "arrival_s": 204.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-documents-v2-010", "arrival_s": 208.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-001", "arrival_s": 212.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-002", "arrival_s": 216.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-003", "arrival_s": 220.0, "tool_delays_s": [0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-004", "arrival_s": 224.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-005", "arrival_s": 228.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-006", "arrival_s": 232.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0]}
+{"task_id": "multistep-inventory-v2-010", "arrival_s": 236.0, "tool_delays_s": [0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]}

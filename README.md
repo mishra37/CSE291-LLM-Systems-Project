@@ -27,6 +27,10 @@ memory, so that more tasks finish without running out of memory?
     server for each run, fixed `NP` during a `K` sweep, and per-type reporting
   - the [18-run controlled v2 core matrix](results/phase1_v2_batch/) with raw
     request, task, quality, and memory measurements
+  - all 56 controlled v2 follow-up runs, with [delay](results/phase1_delay/),
+    [arrival](results/phase1_rate/), [context](results/phase1_context/),
+    [output](results/phase1_output/), and [RAM-cache](results/phase1_cache/)
+    reports and curves
   - a [Phase 1 report draft](docs/phase1_report.tex) with the controlled result
     table, figures, limitations, and milestone appendix
   - an [audit of the earlier v1 sweeps](docs/v1_sweep_audit.md), including
@@ -34,8 +38,7 @@ memory, so that more tasks finish without running out of memory?
 - **Not done yet:**
   - 4-bit KV and a too-small RAM cache (`bash scripts/sweep.sh extra`, queued)
   - repeat runs of the older v1 sweeps (each v1 config ran once)
-  - the remaining controlled v2 sweeps, a finalized Phase 1 report, and the
-    Phase 2 scheduler
+  - a finalized Phase 1 report and the Phase 2 scheduler
 
 ## Controlled v2 core results (snapshot: 2026-11-04 21:44 UTC)
 
@@ -108,31 +111,51 @@ Other core plots: [median task latency](results/phase1_v2_batch/latency_p50_s.pn
 [failure rate](results/phase1_v2_batch/failure_rate.png), and
 [context truncations](results/phase1_v2_batch/context_truncations.png).
 
-### Additional sweeps in progress
+### Controlled v2 follow-up sweeps
 
-At **2026-11-04 21:56 UTC**, the previously suspended launcher resumed on the
-same AWS checkout. It is running 56 additional runs sequentially: tool delay
-(12), arrival rate (12), context length (12), output length (12), and RAM cache
-(8). As of **22:08 UTC**, the first 0-second tool-delay pair had completed
-60/60 tasks under each FIFO without failures; the second repeat was active.
-In that first pair, request FIFO took 364 s and task FIFO 244 s to finish all
-60 tasks. This is a single-repeat observation, not a completed delay curve.
+The launcher finished all **56/56** additional runs on November 4 at
+**7:21 pm Pacific**: 12 tool-delay, 12 arrival-rate, 12 context-length,
+12 response-length, and 8 RAM-cache runs. There were **2,880/2,880 completed
+task executions**, zero model-request failures, zero context truncations, and
+zero forced short outputs. Each configuration has two repeats and both FIFOs.
+The reports validated complete policy pairs and matching model, llama.cpp, and
+source checksums. The synthetic context/output workloads have no reference
+accuracy score; fixed-v2 runs scored 30--34/50 judged tasks, depending on the
+run, with ten writing tasks still awaiting semantic judgment.
 
-After each group, the launcher generates CSV summaries and PNG curves under
-`results/phase1_delay`,
-`results/phase1_rate`, `results/phase1_context`, `results/phase1_output`, and
-`results/phase1_cache` on the instance. These results remain preliminary until
-all paired runs and report controls are checked and copied to this repository.
+| Controlled change | Median result and interpretation |
+|---|---|
+| Tool wait, 0 to 8 s | Task FIFO throughput fell from 0.245 to 0.081 tasks/s, while request FIFO stayed near 0.155--0.159. At 8 s, task p95 was 643 s versus 374 s for request FIFO. Holding an idle slot becomes costly. |
+| Steady arrival, 0.25 to 1 task/s | Request FIFO throughput rose from 0.148 to 0.190 tasks/s, while p95 latency rose from 199 to 269 s. Task FIFO went from 0.139 to 0.164 tasks/s, with p95 rising from 167 to 271 s. The offered arrival span affects throughput. |
+| Paired initial document, nominal 500 to 2,500 tokens | Request FIFO throughput fell from 0.281 to 0.191 tasks/s; task FIFO fell from 0.238 to 0.209. At 2,500 tokens task FIFO led, consistent with higher recomputation cost for released contexts. |
+| Forced output, 32 to 512 tokens | Both FIFOs moved from about 2.8 to 0.191 tasks/s; task p95 rose from about 13.5 to 199 s. Every run generated exactly 40 times the requested token count and had no short output. |
+| Host RAM cache, 0 to 8,192 MiB | Request FIFO throughput improved from 0.150 to 0.174 tasks/s and p95 fell from 398 to 343 s. Server RSS rose from about 873 to 4,821 MiB. Task FIFO changed little because it already retained its slot. |
 
-The team account has a **$20 daily AWS limit**. The EC2 instance continues
-billing while this sequence runs. The launcher stops on an error; a budget halt
-may leave a partial group that needs inspection before resuming.
+![Tool delay versus task p95](results/phase1_delay/latency_p95_s.png)
 
-The raw data and generated report are now in this repository. The instance log
-remains at `/home/ec2-user/phase1-launch.log`. To regenerate the report, run
-`python -m analysis.phase1_report --prefix phase1_v2_batch --out results/phase1_v2_batch`
-and `python -m analysis.phase1_core_plots --report results/phase1_v2_batch`.
+![Context length versus completed tasks per second](results/phase1_context/throughput_completed_tasks_s.png)
 
+![Response length versus task p95](results/phase1_output/latency_p95_s.png)
+
+![Host cache budget versus server RSS](results/phase1_cache/peak_server_rss_mib.png)
+
+The [arrival-rate throughput curve](results/phase1_rate/throughput_completed_tasks_s.png)
+and each group's additional latency, queue, throughput, memory, completion,
+failure, and truncation curves are in the linked report directories above.
+Computed/cached prompt-token totals and per-type metrics are in each group's
+runs.csv and types.csv.
+
+These results identify a **trade-off between recomputing context, holding idle
+slots, and spending host RAM**. They do not yet show GPU memory exhaustion:
+peak GPU use stayed near 5,907--5,925 MiB because server slots and total
+context allocation were fixed. A memory-aware policy should be selected from
+the measured context, delay, and cache effects, then tested against tuned FIFO
+baselines under a tighter memory budget. The synthetic sweeps test serving
+cost, not answer quality. Intermediate output-limit stops and low multistep
+correctness in the fixed workload remain visible limitations.
+
+The raw data and reports are in this repository. The AWS g6.xlarge was still
+running after the launcher finished and continues billing until it is stopped.
 Setup: AWS g6.xlarge (one NVIDIA L4, 24 GB), llama.cpp `llama-server` built with
 CUDA, model Qwen2.5-7B-Instruct (4-bit, Q4_K_M). Setup steps are in
 [setup/README.md](setup/README.md).
