@@ -137,5 +137,6 @@ The report scripts produce `runs.csv`, `types.csv`, `repetitions.csv`, and plots
 - [Phase 1 protocol](docs/phase1_protocol.md): controlled comparison procedure and metric definitions.
 - [Experiment matrix](docs/phase1_experiment_matrix.md): run configurations and reporting commands.
 - [Phase 1 measurements](docs/phase1_results.md): detailed results, plots, interpretation, and exploratory v1 observations.
+- [56 follow-up sweeps](results/phase1_followup_56/README.md): one detailed Markdown report, all five sweep report sets, and links to every raw run.
 - [Phase 1 report draft](docs/phase1_report.tex): writeup and milestone appendix.
 - [Generated reports](results/): raw data, per-group CSVs, and curves for the core, tool-delay, arrival-rate, context, output, and RAM-cache sweeps.
