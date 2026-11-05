@@ -3,7 +3,7 @@
 The [experiment matrix](phase1_experiment_matrix.md) lists the full launch
 sequence and the five performance curves built from this protocol.
 
-The existing [v1 results](../README.md#results-so-far) are useful development
+The existing [v1 results](phase1_results.md#results-so-far) are useful development
 measurements. The new controlled comparison uses the fixed, reproducible
 [v2 selection](../results/validation_v2_60/selection.json): 60 tasks, comprising
 10 short QA, 10 long QA, 10 long generation, and 30 multistep tasks. Using all 80
